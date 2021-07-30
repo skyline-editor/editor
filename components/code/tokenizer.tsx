@@ -30,8 +30,6 @@ interface ColoredText {
   color: string;
 }
 
-let list_id = 0;
-
 export function highlight(code: string, language: string) {
   const tokens = tokenize(code, language);
   const html = codeFromTokens(tokens);

@@ -214,7 +214,7 @@ const Code: React.FC<{ code: string }> = ({ code }) => {
   useEffect(() => {
     setTokenizedCode(highlight(code, 'typescript').map(v => (<div className={styles.line} key={list_id++}>{v.map(v => {
       return (
-        <span style={{ color: v.color }}>{v.text}</span>
+        <span style={{ color: v.color }} key={list_id++} >{v.text}</span>
       );
     })}</div>)));
   }, [code]);
