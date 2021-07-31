@@ -25,7 +25,7 @@ const colors = {
   normal: '#f8f8f2'
 };
 
-interface ColoredText {
+export interface ColoredText {
   text: string;
   color: string;
 }
