@@ -21,7 +21,7 @@ export interface KeyboardShortcut {
 
   name: string;
   description?: string;
-  exec: (code: string, cursors: Cursor[], event: KeyboardEvent) => { code: string, cursors: Cursor[] } | undefined | null;
+  exec: (editor: Editor, event: KeyboardEvent) => unknown;
 }
 
 const keyboardShortcuts: KeyboardShortcut[] = [];
@@ -35,6 +35,7 @@ export class EventController {
   }
   public onKeyDown(event: KeyboardEvent): void {
     if (this.editor.cursors.length < 1) return;
+    event.preventDefault();
 
     for (const keyboardShortcut of keyboardShortcuts) {
       const { exec } = keyboardShortcut;
@@ -45,23 +46,12 @@ export class EventController {
       if (typeof alt !== 'undefined' && alt !== event.altKey) continue;
       if (typeof shift !== 'undefined' && shift !== event.shiftKey) continue;
 
-      const result = exec(this.editor.code, this.editor.cursors, event);
-      if (!result) continue;
-
-      event.preventDefault();
-      
-      const { code, cursors } = result;
-
-      this.editor.code = code;
-      this.editor.cursors = cursors;
+      exec(this.editor, event);
       this.editor.render();
       return;
     }
 
-    const { code, cursors } = addText(this.editor.code, event.key, this.editor.cursors);
-
-    this.editor.code = code;
-    this.editor.cursors = cursors;
+    addText(this.editor, event.key);
     this.editor.render();
   }
   public onMouseDown(event: MouseEvent): void {
@@ -74,7 +64,7 @@ export class EventController {
     const x = event.clientX - editor.getBoundingClientRect().left;
     const y = event.clientY - editor.getBoundingClientRect().top;
 
-    const cursor = new Cursor(Math.floor(y / Char.height), Math.floor(x / Char.width)).validate(this.editor.code, false);
+    const cursor = new Cursor(this.editor, Math.floor(y / Char.height), Math.floor(x / Char.width)).validate(false);
     if (cursor.line < 0) {
       cursor.line = 0;
       cursor.column = 0;
@@ -95,16 +85,16 @@ export class EventController {
     }
 
     this.editor.cursors = this.editor.cursors.filter((cursor, i) => {
-      cursor = cursor.validate(this.editor.code);
+      cursor = cursor.validate();
       return !this.editor.cursors.find((v, j) => {
-        v = v.validate(this.editor.code);
+        v = v.validate();
         if (i === j) return false;
         return v.line === cursor.line && v.column === cursor.column
       });
     });
 
     this.editor.startSelection(cursor);
-    this.editor.selections = [ new Selection(cursor) ];
+    this.editor.selections = [ new Selection(this.editor, cursor) ];
     this.editor.render();
   }
   public onMouseMove(event: MouseEvent): void {
@@ -121,7 +111,7 @@ export class EventController {
     const x = event.clientX - editor.getBoundingClientRect().left;
     const y = event.clientY - editor.getBoundingClientRect().top;
 
-    const cursor = new Cursor(Math.floor(y / Char.height), Math.floor(x / Char.width)).validate(this.editor.code, false);
+    const cursor = new Cursor(this.editor, Math.floor(y / Char.height), Math.floor(x / Char.width)).validate(false);
     if (cursor.line < 0) {
       cursor.line = 0;
       cursor.column = 0;
@@ -136,7 +126,7 @@ export class EventController {
     if (cursor.column > lines[cursor.line].length) cursor.column = lines[cursor.line].length;
 
     const new_cursors = [lastCursor, cursor].sort(Cursor.compare) as [Cursor, Cursor];
-    const selection = new Selection(...new_cursors);
+    const selection = new Selection(this.editor, ...new_cursors);
 
     this.editor.cursors.splice(this.editor.cursors.length - 1, 1, cursor);
     this.editor.selections = [ selection ];
@@ -156,7 +146,7 @@ export class EventController {
     const x = event.clientX - editor.getBoundingClientRect().left;
     const y = event.clientY - editor.getBoundingClientRect().top;
 
-    const cursor = new Cursor(Math.floor(y / Char.height), Math.floor(x / Char.width)).validate(this.editor.code, false);
+    const cursor = new Cursor(this.editor, Math.floor(y / Char.height), Math.floor(x / Char.width)).validate(false);
     if (cursor.line < 0) {
       cursor.line = 0;
       cursor.column = 0;
@@ -171,7 +161,7 @@ export class EventController {
     if (cursor.column > lines[cursor.line].length) cursor.column = lines[cursor.line].length;
 
     const new_cursors = [lastCursor, cursor].sort(Cursor.compare) as [Cursor, Cursor];
-    const selection = new Selection(...new_cursors);
+    const selection = new Selection(this.editor, ...new_cursors);
 
     const same = cursor.line === lastCursor.line && cursor.column === lastCursor.column;
 
@@ -217,7 +207,7 @@ export class Editor {
   }
 
   public endSelection(cursor: Cursor, same: boolean) {
-    this.selections = same ? [] : [ new Selection(this.activeSelection, cursor) ];
+    this.selections = same ? [] : [ new Selection(this, this.activeSelection, cursor) ];
     this.activeSelection = null;
   }
 
@@ -254,10 +244,10 @@ keyboardShortcuts.push({
   description: 'Clear all cursors except the first one',
 
   key: 'Escape',
-  exec: (code, cursors) => {
+  exec: (editor) => {
     return {
-      code,
-      cursors: cursors.slice(0, 1)
+      code: editor.code,
+      cursors: editor.cursors.slice(0, 1)
     };
   }
 });
@@ -267,8 +257,8 @@ keyboardShortcuts.push({
   description: 'adds an tab',
 
   key: 'Tab',
-  exec: (code, cursors) => {
-    return addText(code, 'Tab', cursors);
+  exec: (editor) => {
+    return addText(editor, 'Tab');
   }
 });
 
@@ -278,10 +268,7 @@ keyboardShortcuts.push({
 
   key: 'l',
   ctrl: true,
-  exec: (code, cursors) => {
-    return {
-      code,
-      cursors
-    };
+  exec: (editor) => {
+    
   }
 });

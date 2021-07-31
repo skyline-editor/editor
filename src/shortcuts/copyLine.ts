@@ -1,4 +1,5 @@
-import { KeyboardShortcut } from "../codeEditor";
+import { KeyboardShortcut, Editor } from "../editor";
+import { Cursor } from "../util/cursor";
 const shortcuts: KeyboardShortcut[] = [];
 
 shortcuts.push({
@@ -10,35 +11,26 @@ shortcuts.push({
   alt: true,
   shift: true,
 
-  exec: (code, cursors) => {
-    cursors = cursors.sort((a, b) => {
-      if (a.line < b.line) return -1;
-      if (a.line > b.line) return 1;
-      if (a.column < b.column) return -1;
-      if (a.column > b.column) return 1;
-      return 0;
-    });
+  exec: (editor) => {
+    editor.cursors = editor.cursors.sort(Cursor.compare);
 
-    const lines = code.split('\n');
+    const lines = editor.lines;
     let last = null;
-    for (let i = 0; i < cursors.length; i++) {
-      const cursor = cursors[i];
+    for (let i = 0; i < editor.cursors.length; i++) {
+      const cursor = editor.cursors[i];
 
       if (last && last.line === cursor.line) continue;
       last = cursor;
 
-      const affected = cursors.slice(i + 1);
+      const affected = editor.cursors.slice(i + 1);
 
       const line = lines[cursor.line];
       lines.splice(cursor.line, 0, line);
 
       affected.map(v => v.line += (v.line == cursor.line) ? 0 : 1);
     }
-
-    return {
-      code: lines.join('\n'),
-      cursors
-    }
+    
+    editor.code = lines.join('\n');
   }
 });
 shortcuts.push({
@@ -50,24 +42,18 @@ shortcuts.push({
   alt: true,
   shift: true,
 
-  exec: (code, cursors) => {
-    cursors = cursors.sort((a, b) => {
-      if (a.line < b.line) return -1;
-      if (a.line > b.line) return 1;
-      if (a.column < b.column) return -1;
-      if (a.column > b.column) return 1;
-      return 0;
-    });
+  exec: (editor) => {
+    editor.cursors = editor.cursors.sort(Cursor.compare);
 
-    const lines = code.split('\n');
+    const lines = editor.lines;
     let last = null;
-    for (let i = 0; i < cursors.length; i++) {
-      const cursor = cursors[i];
-      
+    for (let i = 0; i < editor.cursors.length; i++) {
+      const cursor = editor.cursors[i];
+
       if (last && last.line === cursor.line) continue;
       last = cursor;
 
-      const affected = cursors.slice(i + 1);
+      const affected = editor.cursors.slice(i + 1);
 
       const line = lines[cursor.line];
       lines.splice(cursor.line, 0, line);
@@ -75,11 +61,8 @@ shortcuts.push({
       cursor.line++;
       affected.map(v => v.line++);
     }
-
-    return {
-      code: lines.join('\n'),
-      cursors
-    }
+    
+    editor.code = lines.join('\n');
   }
 });
 

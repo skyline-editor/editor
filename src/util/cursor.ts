@@ -1,21 +1,26 @@
+import { Editor } from '../editor';
 import { Selection } from './selection';
 
 export class Cursor {
-  line: number;
-  column: number;
-  selection?: Selection;
+  public line: number;
+  public column: number;
+  public selection?: Selection;
 
-  constructor(line: number, column: number) {
+  private editor: Editor;
+
+  constructor(editor: Editor, line?: number, column?: number) {
     this.line = line ?? 0;
     this.column = column ?? 0;
+
+    this.editor = editor;
   }
 
   clone(): Cursor {
-    return new Cursor(this.line, this.column);
+    return new Cursor(this.editor, this.line, this.column);
   }
 
-  validate(code: string, clone?: boolean, change?: { line?: boolean, column?: boolean}): Cursor {
-    const lines = code.split('\n');
+  validate(clone?: boolean, change?: { line?: boolean, column?: boolean}): Cursor {
+    const lines = this.editor.lines;
 
     clone = clone ?? true;
     change = change ?? {
@@ -37,7 +42,7 @@ export class Cursor {
     }
 
     if (clone) {
-      return new Cursor(line, column);
+      return new Cursor(this.editor, line, column);
     } else {
       this.line = line;
       this.column = column;
@@ -58,12 +63,12 @@ export class Cursor {
     return 0;
   }
 
-  move(code: string, change: { line?: number, column?: number }, clone?: boolean) : Cursor {
+  move(change: { line?: number, column?: number }, clone?: boolean) : Cursor {
     clone = clone ?? true;
-    if (clone) return this.clone().move(code, change, false);
+    if (clone) return this.clone().move(change, false);
 
-    const lines = code.split('\n');
-    const validated = this.validate(code);
+    const lines = this.editor.lines;
+    const validated = this.validate();
   
     if (change.line) {
       this.line = validated.line + change.line;

@@ -1,6 +1,5 @@
+import { Editor } from "../editor";
 import { Cursor } from "./cursor";
-
-// to see if the next char is an bracket
 
 let extra = '';
 const tab_size = 2;
@@ -16,14 +15,14 @@ const write_modes = {
   'Enter': ['insert', '\n'],
 } as {[key: string]: write_mode};
 
-function addTextCursor(code: string, key: string, cursor: Cursor, affected: Cursor[]) : string {
-  if (key.length > 1 && !(key in write_modes)) return code;
+function addTextCursor(editor: Editor, key: string, cursor: Cursor, affected: Cursor[]) : string {
+  if (key.length > 1 && !(key in write_modes)) return editor.code;
   let [mode, ...args] = ['insert', key] as write_mode;
   if (key in write_modes) [mode, ...args] = write_modes[key];
 
-  cursor = cursor.validate(code, false, { column: true });
+  cursor.validate(false, { column: true });
 
-  const lines = code.split('\n');
+  const lines = editor.lines;
   const line = lines[cursor.line];
   const column = cursor.column;
   if (mode === 'delete') {
@@ -140,46 +139,27 @@ function addTextCursor(code: string, key: string, cursor: Cursor, affected: Curs
     });
   }
   
-  return lines.join('\n');
+  editor.code = lines.join('\n');
 }
 
-export function addText(code: string, key: string, cursors: Cursor[]) : { code: string, cursors: Cursor[] } {
+export function addText(editor: Editor, key: string) : void {
   if (key === extra) {
     extra = '';
+    return;
+  }
+  editor.cursors = editor.cursors.sort(Cursor.compare);
 
-    return {
-      code,
-      cursors: cursors.map(v => {
-        v.column++;
-        return v;
-      }),
-    };
+  for (let i = 0; i < editor.cursors.length; i++) {
+    const cursor = editor.cursors[i];
+    addTextCursor(editor, key, cursor, editor.cursors.slice(i + 1));
   }
 
-  cursors = cursors.sort((a, b) => {
-    if (a.line < b.line) return -1;
-    if (a.line > b.line) return 1;
-    if (a.column < b.column) return -1;
-    if (a.column > b.column) return 1;
-    return 0;
-  });
-
-  for (let i = 0; i < cursors.length; i++) {
-    const cursor = cursors[i];
-    code = addTextCursor(code, key, cursor, cursors.slice(i + 1));
-  }
-
-  cursors = cursors.filter((cursor, i) => {
-    cursor = cursor.validate(code);
-    return !cursors.find((v, j) => {
-      v = v.validate(code);
+  editor.cursors = editor.cursors.filter((cursor, i) => {
+    cursor = cursor.validate();
+    return !editor.cursors.find((v, j) => {
+      v = v.validate();
       if (i >= j) return false;
       return v.line === cursor.line && v.column === cursor.column
     });
   });
-
-  return {
-    code,
-    cursors,
-  };
 }

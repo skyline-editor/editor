@@ -1,19 +1,16 @@
-import { KeyboardShortcut } from "../codeEditor";
-import { Cursor } from "../util/cursor";
+import { Editor, KeyboardShortcut } from "../editor";
 const shortcuts: KeyboardShortcut[] = [];
 
-function moveCursors(code: string, cursors: Cursor[], change: Cursor) : Cursor[] {
-  cursors = cursors.map(cursor => cursor.move(code, change, false));
-  cursors = cursors.filter((cursor, i) => {
-    cursor = cursor.validate(code);
-    return !cursors.find((v, j) => {
-      v = cursor.validate(code);
+function moveCursors(editor: Editor, change?: { line?: number, column?: number }) : void {
+  editor.cursors = editor.cursors.map(cursor => cursor.move(change, false));
+  editor.cursors = editor.cursors.filter((cursor, i) => {
+    cursor = cursor.validate();
+    return !editor.cursors.find((v, j) => {
+      v = cursor.validate();
       if (i >= j) return false;
       return v.line === cursor.line && v.column === cursor.column
     });
   });
-
-  return cursors;
 }
 
 shortcuts.push({
@@ -25,13 +22,8 @@ shortcuts.push({
   alt: false,
   shift: false,
 
-  exec: (code, cursors) => {
-    cursors = moveCursors(code, cursors, new Cursor(-1, 0));
-
-    return {
-      code,
-      cursors
-    }
+  exec: (editor) => {
+    moveCursors(editor, { line: -1 });
   }
 });
 shortcuts.push({
@@ -43,13 +35,8 @@ shortcuts.push({
   alt: false,
   shift: false,
 
-  exec: (code, cursors) => {
-    cursors = moveCursors(code, cursors, new Cursor(1, 0));
-
-    return {
-      code,
-      cursors
-    }
+  exec: (editor) => {
+    moveCursors(editor, { line: 1 });
   }
 });
 shortcuts.push({
@@ -61,13 +48,8 @@ shortcuts.push({
   alt: false,
   shift: false,
 
-  exec: (code, cursors) => {
-    cursors = moveCursors(code, cursors, new Cursor(0, -1));
-
-    return {
-      code,
-      cursors
-    }
+  exec: (editor) => {
+    moveCursors(editor, { column: -1 });
   }
 });
 shortcuts.push({
@@ -79,13 +61,8 @@ shortcuts.push({
   alt: false,
   shift: false,
 
-  exec: (code, cursors) => {
-    cursors = moveCursors(code, cursors, new Cursor(0, 1));
-
-    return {
-      code,
-      cursors
-    }
+  exec: (editor) => {
+    moveCursors(editor, { column: 1 });
   }
 });
 

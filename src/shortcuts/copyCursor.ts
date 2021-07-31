@@ -1,4 +1,4 @@
-import { KeyboardShortcut } from "../codeEditor";
+import { KeyboardShortcut, Editor } from "../editor";
 import { Cursor } from "../util/cursor";
 const shortcuts: KeyboardShortcut[] = [];
 
@@ -11,20 +11,14 @@ shortcuts.push({
   alt: true,
   shift: false,
 
-  exec: (code, cursors) => {
-    const new_cursors = cursors.slice();
-    const first_cursor = new_cursors.reduce((acc, v) => {
+  exec: (editor) => {
+    const first_cursor = editor.cursors.reduce((acc, v) => {
       if (v.line === acc.line) return v.column < acc.column ? v : acc;
       return v.line < acc.line ? v : acc;
-    }, new_cursors[0])
+    }, editor.cursors[0])
 
     if (first_cursor.line < 1) return;
-    new_cursors.push(new Cursor(first_cursor.line - 1, first_cursor.column));
-
-    return {
-      code,
-      cursors: new_cursors
-    }
+    editor.cursors.push(new Cursor(editor, first_cursor.line - 1, first_cursor.column));
   }
 });
 shortcuts.push({
@@ -36,20 +30,14 @@ shortcuts.push({
   alt: true,
   shift: false,
 
-  exec: (code, cursors) => {
-    const new_cursors = cursors.slice();
-    const last_cursor = new_cursors.reduce((acc, v) => {
+  exec: (editor) => {
+    const last_cursor = editor.cursors.reduce((acc, v) => {
       if (v.line === acc.line) return v.column > acc.column ? v : acc;
       return v.line > acc.line ? v : acc;
-    }, new_cursors[0])
+    }, editor.cursors[0])
     
-    if (last_cursor.line >= code.split('\n').length - 1) return;
-    new_cursors.push(new Cursor(last_cursor.line + 1, last_cursor.column));
-
-    return {
-      code,
-      cursors: new_cursors
-    }
+    if (last_cursor.line >= editor.lines.length - 1) return;
+    editor.cursors.push(new Cursor(editor, last_cursor.line + 1, last_cursor.column));
   }
 });
 
