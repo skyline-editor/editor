@@ -47,11 +47,15 @@ export class EventController {
       if (typeof shift !== 'undefined' && shift !== event.shiftKey) continue;
 
       exec(this.editor, event);
+      
+      this.editor.tokenize();
       this.editor.render();
       return;
     }
 
     addText(this.editor, event.key);
+
+    this.editor.tokenize();
     this.editor.render();
   }
   public onMouseDown(event: MouseEvent): void {
@@ -190,12 +194,16 @@ export class Editor {
   private canvas: HTMLCanvasElement | null = null;
   private eventController: EventController;
 
-  constructor() {
+  private shouldRender: boolean = false;
+
+  constructor(code?: string) {
     this.eventController = new EventController(this);
 
     // TODO: make this more customizable
-    this.code = '';
+    this.code = code ?? '';
     this.language = 'typescript';
+
+    this.tokenize();
   }
 
   public startSelection(cursor: Cursor) {
@@ -213,12 +221,13 @@ export class Editor {
 
   public mount(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
+    window.addEventListener('blur', this.eventController.onBlur.bind(this.eventController));
+    window.addEventListener('keydown', this.eventController.onKeyDown.bind(this.eventController));
+    this.canvas.addEventListener('mousedown', this.eventController.onMouseDown.bind(this.eventController));
+    this.canvas.addEventListener('mousemove', this.eventController.onMouseMove.bind(this.eventController));
+    this.canvas.addEventListener('mouseup', this.eventController.onMouseUp.bind(this.eventController));
 
-    this.canvas.addEventListener('blur', this.eventController.onKeyDown);
-    this.canvas.addEventListener('keydown', this.eventController.onKeyDown);
-    this.canvas.addEventListener('mousedown', this.eventController.onKeyDown);
-    this.canvas.addEventListener('mousemove', this.eventController.onKeyDown);
-    this.canvas.addEventListener('mouseup', this.eventController.onKeyDown);
+    this.resize();
   }
 
   public tokenize() {
@@ -227,11 +236,86 @@ export class Editor {
   }
 
   public render() {
-  
+    if (!this.canvas) return;
+
+    this.shouldRender = true;
+    requestAnimationFrame(this.renderAll.bind(this));
+  }
+
+  public resize() {
+    if (!this.canvas) return;
+
+    const dpr = window.devicePixelRatio ?? 1;
+
+    this.canvas.width = window.innerWidth * dpr;
+    this.canvas.height = window.innerHeight * dpr;
+    this.render();
+  }
+
+  private renderAll() {
+    const dpr = window.devicePixelRatio ?? 1;
+    console.log(this);
+
+    // if (!this.shouldRender) return;
+
+    const canvas = this.canvas;
+    const context = canvas.getContext('2d');
+
+    context.save();
+    context.font = '20px Consolas';
+    context.textBaseline = 'top';
+    context.scale(dpr, dpr);
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    this.renderCode();
+    this.renderCursors();
+
+    this.shouldRender = false;
+    context.restore();
+  }
+
+  private renderCode() {
+    const context = this.canvas.getContext('2d');
+    const lines = this.tokenized;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      let pos = 0;
+
+      for (let j = 0; j < line.length; j++) {
+        const token = line[j];
+        const x = pos * Char.width;
+        const y = i * Char.height;
+
+        context.fillStyle = token.color;
+        context.fillText(token.text, x, y);
+
+        pos += token.text.length;
+      }
+    }
+  }
+
+  private renderCursors() {
+    const context = this.canvas.getContext('2d');
+    const cursors = this.cursors;
+
+    for (let i = 0; i < cursors.length; i++) {
+      const cursor = cursors[i].validate();
+      const x = cursor.column * Char.width;
+      const y = cursor.line * Char.height;
+
+      context.fillStyle = '#EE5078';
+      context.fillRect(x - 1, y, 2, Char.height);
+    }
+  }
+
+  set lines(value) {
+    this.code = value.join('\n');
   }
 
   get lines() {
-    return this.code.split(/\n/);
+    return this.code.split('\n');
   }
 }
 

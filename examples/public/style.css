@@ -1,0 +1,19 @@
+@font-face {
+  font-family: 'Consolas';
+  src: url('./consolas.ttf');
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+#canvas {
+  width: 100vw;
+  height: 100vh;
+  background-color: #1c1e26;
+
+  cursor: text;
+  font-family: Consolas;
+  outline: none;
+}

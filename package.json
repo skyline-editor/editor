@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "rollup -c rollup.config.js --environment BUILD:development"
+    "build": "rollup -c rollup.config.js --environment BUILD:development",
+    "start": "cd examples && npm start"
   },
   "dependencies": {
     "tslib": "^2.3.0"
