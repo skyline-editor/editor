@@ -5,11 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 
-    <script defer>
+    <script defer type="module">
       import { Editor } from './skyline-editor.js';
 
-      console.log(Editor);
+      const editor = new Editor();
+      
+      editor.mount(document.getElementById('canvas'));
+      editor.render();
+      console.log(editor);
     </script>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      #canvas {
+        width: 100vw;
+        height: 100vh;
+        background-color: #1c1e26;
+      }
+    </style>
   </head>
   <body>
     <canvas id="canvas" ></canvas>
