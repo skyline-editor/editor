@@ -20,9 +20,9 @@ shortcuts.push({
   key: 'ArrowUp',
   ctrl: false,
   alt: false,
-  shift: false,
 
-  exec: (editor) => {
+  exec: (editor, event) => {
+    if (!event.shiftKey) editor.selections = [];
     moveCursors(editor, { line: -1 });
   }
 });
@@ -33,9 +33,9 @@ shortcuts.push({
   key: 'ArrowDown',
   ctrl: false,
   alt: false,
-  shift: false,
 
-  exec: (editor) => {
+  exec: (editor, event) => {
+    if (!event.shiftKey) editor.selections = [];
     moveCursors(editor, { line: 1 });
   }
 });
@@ -46,9 +46,9 @@ shortcuts.push({
   key: 'ArrowLeft',
   ctrl: false,
   alt: false,
-  shift: false,
 
-  exec: (editor) => {
+  exec: (editor, event) => {
+    if (!event.shiftKey) editor.selections = [];
     moveCursors(editor, { column: -1 });
   }
 });
@@ -59,9 +59,9 @@ shortcuts.push({
   key: 'ArrowRight',
   ctrl: false,
   alt: false,
-  shift: false,
 
-  exec: (editor) => {
+  exec: (editor, event) => {
+    if (!event.shiftKey) editor.selections = [];
     moveCursors(editor, { column: 1 });
   }
 });

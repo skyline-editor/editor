@@ -107,6 +107,11 @@ export class EventController {
     const lastCursor = this.editor.getSelection();
     if (!lastCursor) return;
 
+    if (event.button != 0 || event.buttons < 1) {
+      this.editor.activeSelection = null;
+      return;
+    }
+
     const lines = this.editor.lines;
 
     if (!event.target) return;
@@ -189,7 +194,7 @@ export class Editor {
   public selections: Selection[] = [];
 
   private tokenized: ColoredText[][] = [];
-  private activeSelection: Cursor | null = null;
+  public activeSelection: Cursor | null = null;
 
   private canvas: HTMLCanvasElement | null = null;
   private eventController: EventController;
@@ -216,7 +221,7 @@ export class Editor {
   }
 
   public endSelection(cursor: Cursor, same: boolean) {
-    this.selections = same ? [] : [ new Selection(this, this.activeSelection, cursor) ];
+    this.selections = same ? [] : this.selections;
     this.activeSelection = null;
   }
 
@@ -273,6 +278,7 @@ export class Editor {
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
+    this.renderSelections();
     this.renderCode();
     this.renderCursors();
 
@@ -324,6 +330,28 @@ export class Editor {
     }
   }
 
+  private renderSelections() {
+    const context = this.canvas.getContext('2d');
+    const selections = this.selections;
+
+    context.fillStyle = '#3c6487';
+    for (let i = 0; i < selections.length; i++) {
+      const selection = selections[i];
+      const length = selection.end.line - selection.start.line;
+
+      for (let i = 0; i <= length; i++) {
+        const line = selection.start.line + i;
+
+        const x = i < 1 ? selection.start.column * Char.width : 0;
+        const y = line * Char.height;
+
+        const endX = line == selection.end.line ? selection.end.column * Char.width : (this.lines[line].length + 1) * Char.width;
+
+        context.fillRect(x, y, endX - x, Char.height);
+      }
+    }
+  }
+
   set lines(value) {
     this.code = value.join('\n');
   }
@@ -343,10 +371,8 @@ keyboardShortcuts.push({
 
   key: 'Escape',
   exec: (editor) => {
-    return {
-      code: editor.code,
-      cursors: editor.cursors.slice(0, 1)
-    };
+    editor.cursors = editor.cursors.slice(0, 1);
+    editor.selections = [];
   }
 });
 
