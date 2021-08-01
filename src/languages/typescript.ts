@@ -202,14 +202,14 @@ export default function tokenize(code: string, tokens: string[]) {
     if (blank_vars.includes(token)) {
       new_tokens.push(KEYWORD(token, pos));
 
-      let between = "";
-      while (invisible.includes(tokens[i + 1])) {
+      let between = '';
+      while (tokens[i + 1] === ' ') {
         pos += tokens[i].length;
         i++;
         between += tokens[i];
       }
       
-      new_tokens.push(...between);
+      new_tokens.push(between);
       if (tokens[i + 1] && !/\W/g.test(tokens[i + 1])) {
         new_tokens.push(tokens[i + 1]);
         pos += tokens[i].length;

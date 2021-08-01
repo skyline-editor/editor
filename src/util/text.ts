@@ -144,6 +144,7 @@ function addTextCursor(editor: Editor, key: string, cursor: Cursor, affected: Cu
 }
 
 export function addText(editor: Editor, key: string) : void {
+  editor.resetCursorClock();
   if (key === extra) {
     extra = '';
     editor.cursors.map(v => v.column += key.length);

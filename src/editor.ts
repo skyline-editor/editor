@@ -203,6 +203,7 @@ export class Editor {
   private eventController: EventController;
 
   private shouldRender: boolean = false;
+  private cursorClock: NodeJS.Timer;
 
   constructor(code?: string) {
     this.eventController = new EventController(this);
@@ -212,7 +213,7 @@ export class Editor {
     this.language = 'typescript';
 
     this.tokenize();
-    setInterval(this.tick.bind(this), 500);
+    this.cursorClock = setInterval(this.tick.bind(this), 500);
   }
 
   public startSelection(cursor: Cursor) {
@@ -266,9 +267,13 @@ export class Editor {
     this.render();
   }
 
+  public resetCursorClock() {
+    if (this.cursorClock) clearInterval(this.cursorClock);
+    this.cursorClock = setInterval(this.tick.bind(this), 500);
+  }
+
   private renderAll() {
     const dpr = window.devicePixelRatio ?? 1;
-    console.log(this);
 
     // if (!this.shouldRender) return;
 

@@ -3,6 +3,7 @@ import { Selection } from "../util/selection";
 const shortcuts: KeyboardShortcut[] = [];
 
 function moveCursors(editor: Editor, change?: { line?: number, column?: number }, shift: boolean = false) : void {
+  editor.resetCursorClock();
   if (shift) {
     editor.cursors.map(cursor => {
       if (!cursor.selection) editor.selections.push(new Selection(editor, cursor));
