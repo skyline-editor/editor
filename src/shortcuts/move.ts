@@ -6,7 +6,7 @@ function moveCursors(editor: Editor, change?: { line?: number, column?: number }
   editor.cursors = editor.cursors.filter((cursor, i) => {
     cursor = cursor.validate();
     return !editor.cursors.find((v, j) => {
-      v = cursor.validate();
+      v = v.validate();
       if (i >= j) return false;
       return v.line === cursor.line && v.column === cursor.column
     });

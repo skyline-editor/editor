@@ -204,6 +204,7 @@ export class Editor {
     this.language = 'typescript';
 
     this.tokenize();
+    setInterval(this.tick.bind(this), 500);
   }
 
   public startSelection(cursor: Cursor) {
@@ -221,11 +222,15 @@ export class Editor {
 
   public mount(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
+
     window.addEventListener('blur', this.eventController.onBlur.bind(this.eventController));
     window.addEventListener('keydown', this.eventController.onKeyDown.bind(this.eventController));
+    window.addEventListener('resize', this.resize.bind(this));
+
     this.canvas.addEventListener('mousedown', this.eventController.onMouseDown.bind(this.eventController));
     this.canvas.addEventListener('mousemove', this.eventController.onMouseMove.bind(this.eventController));
     this.canvas.addEventListener('mouseup', this.eventController.onMouseUp.bind(this.eventController));
+    this.canvas.addEventListener('resize', this.resize.bind(this));
 
     this.resize();
   }
@@ -296,16 +301,25 @@ export class Editor {
     }
   }
 
+  private tick() {
+    for (let i = 0; i < this.cursors.length; i++) {
+      this.cursors[i].visible = !this.cursors[i].visible;
+    }
+    this.render();
+  }
+
   private renderCursors() {
     const context = this.canvas.getContext('2d');
     const cursors = this.cursors;
-
+    
+    context.fillStyle = '#EE5078';
     for (let i = 0; i < cursors.length; i++) {
       const cursor = cursors[i].validate();
+      if (!cursor.visible) continue;
+
       const x = cursor.column * Char.width;
       const y = cursor.line * Char.height;
 
-      context.fillStyle = '#EE5078';
       context.fillRect(x - 1, y, 2, Char.height);
     }
   }

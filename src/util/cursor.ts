@@ -5,6 +5,7 @@ export class Cursor {
   public line: number;
   public column: number;
   public selection?: Selection;
+  public visible: boolean = true;
 
   private editor: Editor;
 
@@ -42,7 +43,9 @@ export class Cursor {
     }
 
     if (clone) {
-      return new Cursor(this.editor, line, column);
+      const cursor = new Cursor(this.editor, line, column);
+      cursor.visible = this.visible;
+      return cursor;
     } else {
       this.line = line;
       this.column = column;
@@ -99,7 +102,8 @@ export class Cursor {
         }
       }
     }
-    
+
+    this.visible = true;
     return this;
   }
 }

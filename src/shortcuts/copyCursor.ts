@@ -19,6 +19,7 @@ shortcuts.push({
 
     if (first_cursor.line < 1) return;
     editor.cursors.push(new Cursor(editor, first_cursor.line - 1, first_cursor.column));
+    editor.cursors.map(v => v.visible = true);
   }
 });
 shortcuts.push({
@@ -38,6 +39,7 @@ shortcuts.push({
     
     if (last_cursor.line >= editor.lines.length - 1) return;
     editor.cursors.push(new Cursor(editor, last_cursor.line + 1, last_cursor.column));
+    editor.cursors.map(v => v.visible = true);
   }
 });
 
