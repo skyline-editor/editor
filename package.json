@@ -1,9 +1,9 @@
 {
   "name": "skyline-editor",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "dist/skyline-editor.js",
   "scripts": {
-    "build": "rollup -c rollup.config.js --environment BUILD:minify",
+    "build": "tsc && rollup -c rollup.config.js --environment BUILD:minify",
     "start": "cd examples && npm start"
   },
   "devDependencies": {
