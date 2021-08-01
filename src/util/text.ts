@@ -17,8 +17,22 @@ const write_modes = {
 
 function addTextCursor(editor: Editor, key: string, cursor: Cursor, affected: Cursor[]) : string {
   if (key.length > 1 && !(key in write_modes)) return editor.code;
+
   let [mode, ...args] = ['insert', key] as write_mode;
   if (key in write_modes) [mode, ...args] = write_modes[key];
+
+  if (cursor.selection) {
+    const selection = cursor.selection;
+    selection.setText('');
+
+    cursor.line = selection.start.line;
+    cursor.column = selection.start.column;
+
+    selection.destroy();
+    editor.selections.splice(editor.selections.indexOf(selection), 1);
+
+    if (mode === 'delete') return editor.code;
+  }
 
   cursor.validate(false, { column: true });
   cursor.visible = true;
@@ -140,7 +154,7 @@ function addTextCursor(editor: Editor, key: string, cursor: Cursor, affected: Cu
     });
   }
   
-  editor.code = lines.join('\n');
+  return editor.code = lines.join('\n');
 }
 
 export function addText(editor: Editor, key: string) : void {

@@ -61,9 +61,9 @@ export class EventController {
   public onMouseDown(event: MouseEvent): void {
     event.preventDefault();  
     const lines = this.editor.lines;
+    const editor = this.editor.canvas;
 
-    if (!event.target) return;
-    const editor = event.target as HTMLCanvasElement;
+    if (!editor) return;
 
     const x = event.clientX - editor.getBoundingClientRect().left;
     const y = event.clientY - editor.getBoundingClientRect().top;
@@ -114,9 +114,9 @@ export class EventController {
     }
 
     const lines = this.editor.lines;
+    const editor = this.editor.canvas;
 
-    if (!event.target) return;
-    const editor = event.target as HTMLCanvasElement;
+    if (!editor) return;
 
     const x = event.clientX - editor.getBoundingClientRect().left;
     const y = event.clientY - editor.getBoundingClientRect().top;
@@ -150,9 +150,9 @@ export class EventController {
     if (!lastCursor) return;
 
     const lines = this.editor.lines;
+    const editor = this.editor.canvas;
 
-    if (!event.target) return;
-    const editor = event.target as HTMLCanvasElement;
+    if (!editor) return;
 
     const x = event.clientX - editor.getBoundingClientRect().left;
     const y = event.clientY - editor.getBoundingClientRect().top;
@@ -199,7 +199,7 @@ export class Editor {
   private tokenized: ColoredText[][] = [];
   public activeSelection: Cursor | null = null;
 
-  private canvas: HTMLCanvasElement | null = null;
+  public canvas: HTMLCanvasElement | null = null;
   private eventController: EventController;
 
   private shouldRender: boolean = false;
@@ -233,13 +233,13 @@ export class Editor {
   public mount(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
 
+    window.addEventListener('resize', this.resize.bind(this));
     window.addEventListener('blur', this.eventController.onBlur.bind(this.eventController));
     window.addEventListener('keydown', this.eventController.onKeyDown.bind(this.eventController));
-    window.addEventListener('resize', this.resize.bind(this));
+    window.addEventListener('mousemove', this.eventController.onMouseMove.bind(this.eventController));
+    window.addEventListener('mouseup', this.eventController.onMouseUp.bind(this.eventController));
 
     this.canvas.addEventListener('mousedown', this.eventController.onMouseDown.bind(this.eventController));
-    this.canvas.addEventListener('mousemove', this.eventController.onMouseMove.bind(this.eventController));
-    this.canvas.addEventListener('mouseup', this.eventController.onMouseUp.bind(this.eventController));
     this.canvas.addEventListener('resize', this.resize.bind(this));
 
     this.resize();

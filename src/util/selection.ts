@@ -48,6 +48,6 @@ export class Selection {
     lines[this.start.line] = lines[this.start.line].substring(0, this.start.column) + text + lines[this.end.line].substring(this.end.column);
     lines.splice(this.start.line + 1, Math.max(0, this.end.line - this.start.line));
 
-    return lines.join('\n');
+    return this.editor.code = lines.join('\n');
   }
 }
