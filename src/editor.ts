@@ -210,7 +210,7 @@ export class Editor {
 
     // TODO: make this more customizable
     this.code = code ?? '';
-    this.language = 'typescript';
+    this.language = 'json';
 
     this.tokenize();
     this.cursorClock = setInterval(this.tick.bind(this), 500);
