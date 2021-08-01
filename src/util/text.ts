@@ -21,6 +21,7 @@ function addTextCursor(editor: Editor, key: string, cursor: Cursor, affected: Cu
   if (key in write_modes) [mode, ...args] = write_modes[key];
 
   cursor.validate(false, { column: true });
+  cursor.visible = true;
 
   const lines = editor.lines;
   const line = lines[cursor.line];
@@ -145,6 +146,7 @@ function addTextCursor(editor: Editor, key: string, cursor: Cursor, affected: Cu
 export function addText(editor: Editor, key: string) : void {
   if (key === extra) {
     extra = '';
+    editor.cursors.map(v => v.column += key.length);
     return;
   }
   editor.cursors = editor.cursors.sort(Cursor.compare);
