@@ -1,7 +1,6 @@
 {
   "name": "skyline-editor",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.0.3",
   "main": "dist/skyline-editor.js",
   "scripts": {
     "build": "rollup -c rollup.config.js --environment BUILD:development",
