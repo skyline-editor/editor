@@ -261,9 +261,10 @@ export class Editor {
     if (!this.canvas) return;
 
     const dpr = window.devicePixelRatio ?? 1;
-
-    this.canvas.width = window.innerWidth * dpr;
-    this.canvas.height = window.innerHeight * dpr;
+    const clientRect = this.canvas.getBoundingClientRect();
+    
+    this.canvas.width = clientRect.width * dpr;
+    this.canvas.height = clientRect.height * dpr;
     this.render();
   }
 
