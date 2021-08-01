@@ -17,6 +17,14 @@ export class Selection {
     this.editor = editor;
   }
 
+  destroy() {
+    this.start.selection = null;
+    this.end.selection = null;
+
+    this.start = null;
+    this.end = null;
+  }
+
   moveStart(change: { line?: number, column?: number }): Selection {
     this.start.move(change, false);
     return this;

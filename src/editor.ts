@@ -98,6 +98,7 @@ export class EventController {
     });
 
     this.editor.startSelection(cursor);
+    this.editor.selections.map(v => v.destroy());
     this.editor.selections = [ new Selection(this.editor, cursor) ];
     this.editor.render();
   }
@@ -138,6 +139,7 @@ export class EventController {
     const selection = new Selection(this.editor, ...new_cursors);
 
     this.editor.cursors.splice(this.editor.cursors.length - 1, 1, cursor);
+    this.editor.selections.map(v => v.destroy());
     this.editor.selections = [ selection ];
     this.editor.render();
   }
@@ -175,6 +177,7 @@ export class EventController {
     const same = cursor.line === lastCursor.line && cursor.column === lastCursor.column;
 
     this.editor.cursors.splice(this.editor.cursors.length - 1, 1, cursor);
+    this.editor.selections.map(v => v.destroy());
     this.editor.selections = [ selection ];
     this.editor.endSelection(cursor, same);
     this.editor.render();
@@ -221,6 +224,7 @@ export class Editor {
   }
 
   public endSelection(cursor: Cursor, same: boolean) {
+    if (same) this.selections.map(v => v.destroy());
     this.selections = same ? [] : this.selections;
     this.activeSelection = null;
   }
@@ -372,6 +376,7 @@ keyboardShortcuts.push({
   key: 'Escape',
   exec: (editor) => {
     editor.cursors = editor.cursors.slice(0, 1);
+    editor.selections.map(v => v.destroy());
     editor.selections = [];
   }
 });
