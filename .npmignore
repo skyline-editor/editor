@@ -1,0 +1,13 @@
+.github
+node_modules
+src
+examples
+
+dist/dts
+dist/js
+
+.eslintrc
+.prettierrc
+rollup.config.js
+tsconfig.json
+yarn.lock

@@ -205,12 +205,12 @@ export class Editor {
   private shouldRender: boolean = false;
   private cursorClock: NodeJS.Timer;
 
-  constructor(code?: string) {
+  constructor(code?: string, language?: string) {
     this.eventController = new EventController(this);
 
     // TODO: make this more customizable
     this.code = code ?? '';
-    this.language = 'json';
+    this.language = language ?? 'typescript';
 
     this.tokenize();
     this.cursorClock = setInterval(this.tick.bind(this), 500);
