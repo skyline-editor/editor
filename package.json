@@ -2,14 +2,13 @@
   "name": "skyline-editor",
   "version": "0.1.0",
   "private": true,
+  "main": "dist/skyline-editor.js",
   "scripts": {
     "build": "rollup -c rollup.config.js --environment BUILD:development",
     "start": "cd examples && npm start"
   },
-  "dependencies": {
-    "tslib": "^2.3.0"
-  },
   "devDependencies": {
+    "tslib": "^2.3.0",
     "@rollup/plugin-buble": "^0.21.3",
     "@rollup/plugin-commonjs": "^20.0.0",
     "@rollup/plugin-node-resolve": "^13.0.4",
