@@ -14,7 +14,7 @@ const config = [
     {
         input: 'src/index.ts',
         output: {
-            file: 'dist/skyline-editor.js',
+            file: 'dist/index.js',
             format: 'es',
         },
         plugins: [
