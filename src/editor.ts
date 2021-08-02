@@ -9,6 +9,7 @@ import copyLineShortcuts from './shortcuts/copyLine';
 import copyCursorShortcuts from './shortcuts/copyCursor';
 import { defaultLanguage, Language } from "./language";
 import { EventEmitter } from "events";
+import { isEmptyBindingPattern } from "typescript";
 
 export const Char = {
   width: 11,
@@ -471,6 +472,21 @@ keyboardShortcuts.push({
       const selection = new Selection(editor, new Cursor(editor, line, 0), cursor);
       editor.selections.push(selection);
     }
+  }
+});
+keyboardShortcuts.push({
+  name: 'Select All',
+  description: 'Selects all text',
+
+  key: 'a',
+  ctrl: true,
+  exec: (editor) => {
+    const lines = editor.lines;
+    const cursor = new Cursor(editor, lines.length - 1, lines[lines.length - 1].length);
+    const selection = new Selection(editor, new Cursor(editor, 0, 0), cursor);
+
+    editor.cursors = [cursor];
+    editor.selections = [selection];
   }
 });
 keyboardShortcuts.push({

@@ -64,7 +64,9 @@ export class Cursor {
     
     if (change.column) {
       if (column < 0) column = 0;
-      if (column > lines[line].length) column = lines[line].length;
+      if (line < lines.length) {
+        if (column > lines[line].length) column = lines[line].length;
+      }
     }
 
     if (clone) {
