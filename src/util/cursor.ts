@@ -103,6 +103,8 @@ export class Cursor {
       }
     }
 
+    if (this.selection) this.selection.validate();
+
     this.visible = true;
     return this;
   }
