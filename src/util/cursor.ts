@@ -16,6 +16,31 @@ export class Cursor {
     this.editor = editor;
   }
 
+  distance(other: Cursor): number {
+    return Cursor.distance(this, other);
+  }
+  
+  static distance(a: Cursor, b: Cursor): number {
+    const editor = a.editor;
+
+    let distance = 0;
+    if (a.line === b.line) distance = Math.abs(a.column - b.column);
+    if (a.line < b.line) {
+      distance += editor.lines[a.line].length - a.column;
+      distance += b.column;
+      for (let i = a.line + 1; i < b.line; i++) distance += editor.lines[i].length;
+    }
+    if (a.line > b.line) {
+      distance += editor.lines[b.line].length - b.column;
+      distance += a.column;
+      for (let i = b.line + 1; i < a.line; i++) {
+        distance += editor.lines[i].length;
+      }
+    }
+
+    return distance;
+  }
+
   clone(): Cursor {
     return new Cursor(this.editor, this.line, this.column);
   }

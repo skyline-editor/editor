@@ -68,22 +68,41 @@ export class EventController {
 
     const cursor = this.getCursorFromEvent(event);
 
-    if (event.altKey) {
-      for (let i = 0; i < this.editor.cursors.length; i++) {
-        const c = this.editor.cursors[i];
-        if (cursor.line === c.line && cursor.column === c.column) {
-          this.editor.cursors.splice(i, 1);
-          break;
-        }
-      }
-      this.editor.cursors.push(cursor);
-    } else {
-      this.editor.selections.map(v => v.destroy());
-      this.editor.selections = [];
-      this.editor.cursors = [cursor];
-    };
+    if (event.shiftKey) {
+      const lastCursor = this.editor.cursors.reduce((acc, v) => {
+        if (acc.line === cursor.line && acc.column == cursor.column) return acc;
+        if (v.line === cursor.line && v.column == cursor.column) return v;
+        
+        const lastDistance = Cursor.distance(cursor, acc);
+        const newDistance = Cursor.distance(cursor, v);
 
-    this.startSelection(cursor);
+        if (newDistance < lastDistance) return v;
+        return acc;
+      }, this.editor.cursors[0]);
+      if (lastCursor.line === cursor.line && lastCursor.column === cursor.column) return;
+
+      this.activeSelection = lastCursor;
+      this.editor.cursors = [cursor];
+      this.editor.selections.map(v => v.destroy());
+      this.editor.selections = [new Selection(this.editor, cursor, lastCursor).validate()];
+    } else {
+      if (event.altKey) {
+        for (let i = 0; i < this.editor.cursors.length; i++) {
+          const c = this.editor.cursors[i];
+          if (cursor.line === c.line && cursor.column === c.column) {
+            this.editor.cursors.splice(i, 1);
+            break;
+          }
+        }
+        this.editor.cursors.push(cursor);
+      } else {
+        this.editor.selections.map(v => v.destroy());
+        this.editor.selections = [];
+        this.editor.cursors = [cursor];
+      };
+      this.startSelection(cursor);
+    }
+
     this.editor.render();
   }
   public onMouseMove(event: MouseEvent): void {
@@ -150,14 +169,14 @@ export class EventController {
     const x = event.clientX - editor.getBoundingClientRect().left;
     const y = event.clientY - editor.getBoundingClientRect().top;
 
-    const cursor = new Cursor(this.editor, Math.floor(y / Char.height), Math.floor(x / Char.width)).validate(false);
+    const cursor = new Cursor(this.editor, Math.floor(y / Char.height), Math.floor(x / Char.width));
     if (cursor.line < 0) {
       cursor.line = 0;
       cursor.column = 0;
     }
 
     if (cursor.line >= lines.length) {
-      cursor.line = lines.length;
+      cursor.line = lines.length - 1;
       cursor.column = lines[cursor.line].length;
     }
 
