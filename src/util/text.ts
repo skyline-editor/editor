@@ -35,6 +35,11 @@ async function addTextCursor(editor: Editor, key: string, cursor: Cursor, affect
     if (mode === 'delete') return;
   }
 
+  if (key === 'Paste') {
+    if (!navigator.clipboard) return console.error('Clipboard API not present');
+    args = [await navigator.clipboard.readText()];
+  }
+
   cursor.validate(false, { column: true });
   cursor.visible = true;
 
@@ -124,14 +129,6 @@ async function addTextCursor(editor: Editor, key: string, cursor: Cursor, affect
       if (nextChar && prevChar && spacing.includes(t)) extra = ' ';
     }
 
-    if (key === 'Paste') {
-      if (!navigator.clipboard) {
-        return console.error('Clipboard API not present');
-      }
-      extra = await navigator.clipboard.readText();
-    }
-
-    
     if (text === '(') extra = ')';
     if (text === '{') extra = '}';
     if (text === '[') extra = ']';
