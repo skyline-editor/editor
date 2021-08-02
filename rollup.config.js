@@ -25,7 +25,7 @@ const config = [
             buble({
                 transforms: {
                     forOf: false,
-
+                    generator: false,
                 }
             }),
             nodeResolve({
