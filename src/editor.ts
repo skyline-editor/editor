@@ -210,6 +210,15 @@ export class Editor {
     navigator.clipboard.writeText(this.cursors.sort(Cursor.compare).filter(v => v.selection).map(v => v.selection.getText()).join('\n'));
   }
 
+  public cut(): void {
+    if (!navigator.clipboard) return console.error('Clipboard API not present');
+    navigator.clipboard.writeText(this.cursors.sort(Cursor.compare).filter(v => v.selection).map(v => v.selection.getText()).join('\n'));
+    this.cursors.sort(Cursor.compare).filter(v => v.selection).map(v => v.selection.setText(''));
+
+    this.selections.map(v => v.destroy());
+    this.selections = [];
+  }
+
   public paste(): void {
     addText(this, 'Paste');
   }
@@ -463,6 +472,16 @@ keyboardShortcuts.push({
   ctrl: true,
   exec: (editor) => {
     editor.copy();
+  }
+});
+keyboardShortcuts.push({
+  name: 'Cut',
+  description: 'cuts the current selections to the clipboard',
+
+  key: 'x',
+  ctrl: true,
+  exec: (editor) => {
+    editor.cut();
   }
 });
 keyboardShortcuts.push({
