@@ -5,4 +5,4 @@ dist/dts
 dist/js
 
 rollup.config.js
-tsconfig.js
+tsconfig.json

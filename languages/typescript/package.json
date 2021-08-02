@@ -1,6 +1,6 @@
 {
   "name": "@skyline-editor/language-typescript",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc && rollup -c rollup.config.js --environment BUILD:minify"
