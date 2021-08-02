@@ -1,24 +1,14 @@
-import { ArrayToken, Token, ValueToken } from "../tokenizer";
-
-const STRING = (value: string, pos: number) => ({ type: 'string', value, pos }) as ValueToken;
-const NUMBER = (value: string, pos: number) => ({ type: 'number', value, pos }) as ValueToken;
-const BOOLEAN = (value: string, pos: number) => ({ type: 'boolean', value, pos }) as ValueToken;
-const KEYWORD = (value: string, pos: number) => ({ type: 'keyword', value, pos }) as ValueToken;
-const VARIABLE = (value: string, pos: number) => ({ type: 'variable', value, pos }) as ValueToken;
-const COMMENT = (value: string, pos: number) => ({ type: 'comment', value, pos }) as ValueToken;
-const STATIC = (value: string, pos: number) => ({ type: 'static', value, pos }) as ValueToken;
-const OPERATOR = (value: string, pos: number) => ({ type: 'operator', value, pos }) as ValueToken;
-
-const PARENTHESES = (value: Token[], pos: number) => ({ type: 'parentheses', value, pos }) as ArrayToken;
-const BRACKETS = (value: Token[], pos: number) => ({ type: 'brackets', value, pos }) as ArrayToken;
-const BRACES = (value: Token[], pos: number) => ({ type: 'braces', value, pos }) as ArrayToken;
-
-
-const invisible = [
-  ' ',
-  '\n',
-  '\t'
-];
+export interface ValueToken {
+  type: 'string' | 'number' | 'boolean' | 'keyword' | 'variable' | 'comment' | 'static' | 'operator';
+  value: string;
+  pos?: number;
+}
+export interface ArrayToken {
+  type: 'parentheses' | 'brackets' | 'braces';
+  value: Token[];
+  pos?: number;
+}
+export type Token = ValueToken | ArrayToken | string;
 
 const strings = [
   '\'',
@@ -110,13 +100,13 @@ export default function tokenize(code: string, tokens: string[]) {
 
     if (env.string) {
       if (token === '\n' && env.string.value !== '`') {
-        new_tokens.push(STRING(code.slice(env.string.pos, pos), env.string.pos));
+        new_tokens.push({type: 'string', value: code.slice(env.string.pos, pos), pos: env.string.pos});
         new_tokens.push('\n');
         env.string = null;
         continue;
       }
       if (previous_token !== '\\' && token === env.string.value) {
-        new_tokens.push(STRING(code.slice(env.string.pos, pos + 1), env.string.pos));
+        new_tokens.push({type: 'string', value: code.slice(env.string.pos, pos + 1), pos: env.string.pos});
         env.string = null;
         continue;
       }
@@ -130,7 +120,7 @@ export default function tokenize(code: string, tokens: string[]) {
 
       if (env.comment.value === '//' && token === '\n') {
         const value = code.substr(env.comment.pos, length);
-        new_tokens.push(COMMENT(value, env.comment.pos));
+        new_tokens.push({type: 'comment', value, pos: env.comment.pos});
         
         pos -= tokens[i - 1].length;
         i--;
@@ -139,7 +129,7 @@ export default function tokenize(code: string, tokens: string[]) {
       }
       if (env.comment.value === '/*' && value === '*/') {
         const value = code.substr(env.comment.pos, length + 2);
-        new_tokens.push(COMMENT(value, env.comment.pos));
+        new_tokens.push({type: 'comment', value, pos: env.comment.pos});
         
         i++;
         pos++;
@@ -164,9 +154,9 @@ export default function tokenize(code: string, tokens: string[]) {
       const pos = env.brackets.pop().pos;
       const value = new_tokens.splice(pos, new_tokens.length - pos);
 
-      if (token === ')') new_tokens.push(PARENTHESES(value, pos));
-      if (token === ']') new_tokens.push(BRACES(value, pos));
-      if (token === '}') new_tokens.push(BRACKETS(value, pos));
+      if (token === ')') new_tokens.push({type: 'parentheses', value, pos});
+      if (token === ']') new_tokens.push({type: 'braces', value, pos});
+      if (token === '}') new_tokens.push({type: 'brackets', value, pos});
 
       new_tokens.push(token);
       continue;
@@ -200,7 +190,7 @@ export default function tokenize(code: string, tokens: string[]) {
     }
 
     if (blank_vars.includes(token)) {
-      new_tokens.push(KEYWORD(token, pos));
+      new_tokens.push({type: 'keyword', value: token, pos});
 
       let between = '';
       while (tokens[i + 1] === ' ') {
@@ -219,22 +209,22 @@ export default function tokenize(code: string, tokens: string[]) {
     }
 
     if (keywords.includes(token)) {
-      new_tokens.push(KEYWORD(token, pos));
+      new_tokens.push({type: 'keyword', value: token, pos});
       continue;
     }
 
     if (token == 'true' || token == 'false') {
-      new_tokens.push(BOOLEAN(token, pos));
+      new_tokens.push({type: 'boolean', value: token, pos});
       continue;
     }
 
     if (statics.includes(token)) {
-      new_tokens.push(STATIC(token, pos));
+      new_tokens.push({type: 'static', value: token, pos});
       continue;
     }
 
     if (!/\D/g.test(token)) {
-      new_tokens.push(NUMBER(token, pos));
+      new_tokens.push({type: 'number', value: token, pos});
       continue;
     }
 
@@ -256,25 +246,25 @@ export default function tokenize(code: string, tokens: string[]) {
       pos += total;
       pos -= tokens[i].length;
 
-      new_tokens.push(OPERATOR(operator, pos));
+      new_tokens.push({type: 'operator', value: operator, pos});
       continue;
     }
 
     if (!/\W/g.test(token)) {
-      new_tokens.push(VARIABLE(token, pos));
+      new_tokens.push({type: 'variable', value: token, pos});
       continue;
     }
 
     if (token == '.') {
       const next_token = tokens[i + 1];
-      if (next_token && !/\D/g.test(next_token)) new_tokens.push(NUMBER(token, pos)); else new_tokens.push(OPERATOR(token, pos));
+      if (next_token && !/\D/g.test(next_token)) new_tokens.push({type: 'number', value: token, pos}); else new_tokens.push({type: 'operator', value: token, pos});
       continue;
     }
 
     new_tokens.push(token);
   }
 
-  if (env.string) new_tokens.push(STRING(code.slice(env.string.pos), env.string.pos));
-  if (env.comment) new_tokens.push(COMMENT(code.substr(env.comment.pos), env.comment.pos));
+  if (env.string) new_tokens.push({type: 'string', value: code.slice(env.string.pos), pos: env.string.pos});
+  if (env.comment) new_tokens.push({type: 'comment', value: code.substr(env.comment.pos), pos: env.comment.pos});
   return new_tokens;
 }
