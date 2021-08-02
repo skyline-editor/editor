@@ -171,9 +171,7 @@ export class EventController {
     if (cursor.column < 0) cursor.column = 0;
     if (cursor.column > lines[cursor.line].length) cursor.column = lines[cursor.line].length;
 
-    const new_cursors = [lastCursor, cursor].sort(Cursor.compare) as [Cursor, Cursor];
-    const selection = new Selection(this.editor, ...new_cursors);
-
+    const selection = new Selection(this.editor, lastCursor, cursor).validate();
     const same = cursor.line === lastCursor.line && cursor.column === lastCursor.column;
 
     this.editor.cursors.splice(this.editor.cursors.length - 1, 1, cursor);
@@ -404,6 +402,25 @@ keyboardShortcuts.push({
   key: 'l',
   ctrl: true,
   exec: (editor) => {
-    
+    for (let i = 0; i < editor.cursors.length; i++) {
+      const cursor = editor.cursors[i];
+      const line = cursor.line;
+
+      if (cursor.selection) {
+        const selection = cursor.selection;
+        selection.destroy();
+        editor.selections.splice(editor.selections.indexOf(selection), 1);
+      }
+
+      cursor.line++;
+      cursor.column = 0;
+      if (editor.lines.length <= cursor.line) {
+        cursor.line = line;
+        cursor.column = editor.lines[line].length;
+      }
+
+      const selection = new Selection(editor, new Cursor(editor, line, 0), cursor);
+      editor.selections.push(selection);
+    }
   }
 });
