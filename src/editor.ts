@@ -124,11 +124,11 @@ export class EventController {
   }
 
   private endSelection(cursor: Cursor) {
-    this.activeSelection = null;
     const same = cursor.line === this.activeSelection.line && cursor.column === this.activeSelection.column;
-    if (same) return;
+    if (same) return this.activeSelection = null;;
 
     this.editLastSelection(cursor);
+    this.activeSelection = null;
   }
 
   private editLastSelection(cursor: Cursor) {
