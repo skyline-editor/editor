@@ -57,8 +57,8 @@ export class Selection {
 
     const lines = this.editor.lines;
     const affectedLines = lines.slice(this.start.line, this.end.line + 1);
-    affectedLines[0] = affectedLines[0].substring(this.start.column);
     affectedLines[affectedLines.length - 1] = affectedLines[affectedLines.length - 1].substring(0, this.end.column);
+    affectedLines[0] = affectedLines[0].substring(this.start.column);
 
     return affectedLines.join('\n');
   }
