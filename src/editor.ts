@@ -8,6 +8,7 @@ import moveShortcuts from './shortcuts/move';
 import copyLineShortcuts from './shortcuts/copyLine';
 import copyCursorShortcuts from './shortcuts/copyCursor';
 import { defaultLanguage, Language } from "./language";
+import { EventEmitter } from "events";
 
 export const Char = {
   width: 11,
@@ -42,8 +43,11 @@ export class EventController {
       const { exec } = keyboardShortcut;
       const { ctrl, alt, shift, key } = keyboardShortcut;
 
+      let ctrlKey = event.ctrlKey;
+      if (navigator.appVersion.includes('Mac') && event.metaKey) ctrlKey = true;
+
       if (typeof key !== 'undefined' && event.key !== key) continue;
-      if (typeof ctrl !== 'undefined' && ctrl !== event.ctrlKey) continue;
+      if (typeof ctrl !== 'undefined' && ctrl !== ctrlKey) continue;
       if (typeof alt !== 'undefined' && alt !== event.altKey) continue;
       if (typeof shift !== 'undefined' && shift !== event.shiftKey) continue;
 
@@ -164,9 +168,15 @@ export class EventController {
   }
 }
 
+interface Events {
+  save: (editor: Editor) => void;
+}
+
 export class Editor {
   public cursors: Cursor[] = [];
   public selections: Selection[] = [];
+
+  private events = new EventEmitter();
 
   private _code: string = '';
   private _tokenized: ColoredText[][] = [];
@@ -181,6 +191,18 @@ export class Editor {
   constructor(code?: string) {
     if (code) this.code = code;
     this.cursorClock = setInterval(this.tick.bind(this), 500);
+  }
+
+  public on<T extends keyof Events>(event: T, handler: Events[T]): void {
+    this.events.on(event, handler);
+  }
+
+  public once<T extends keyof Events>(event: T, handler: Events[T]): void {
+    this.events.once(event, handler);
+  }
+
+  public save() {
+    this.events.emit('save', this);
   }
 
   get code() {
@@ -412,5 +434,15 @@ keyboardShortcuts.push({
       const selection = new Selection(editor, new Cursor(editor, line, 0), cursor);
       editor.selections.push(selection);
     }
+  }
+});
+keyboardShortcuts.push({
+  name: 'Save',
+  description: 'runs the event save to all listeners',
+
+  key: 's',
+  ctrl: true,
+  exec: (editor) => {
+    editor.save();
   }
 });
