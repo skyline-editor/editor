@@ -2,6 +2,7 @@
 node_modules
 src
 examples
+languages
 
 dist/dts
 dist/js
