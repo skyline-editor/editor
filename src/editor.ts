@@ -205,6 +205,15 @@ export class Editor {
     this.events.emit('save', this);
   }
 
+  public copy(): void {
+    if (!navigator.clipboard) return console.error('Clipboard API not present');
+    navigator.clipboard.writeText(this.cursors.sort(Cursor.compare).filter(v => v.selection).map(v => v.selection.getText()).join('\n'));
+  }
+
+  public paste(): void {
+    addText(this, 'Paste');
+  }
+
   get code() {
     return this._code;
   }
@@ -444,5 +453,25 @@ keyboardShortcuts.push({
   ctrl: true,
   exec: (editor) => {
     editor.save();
+  }
+});
+keyboardShortcuts.push({
+  name: 'Copy',
+  description: 'copies the current selections to the clipboard',
+
+  key: 'c',
+  ctrl: true,
+  exec: (editor) => {
+    editor.copy();
+  }
+});
+keyboardShortcuts.push({
+  name: 'Paste',
+  description: 'pastes the content on the clipboard to all selections',
+
+  key: 'v',
+  ctrl: true,
+  exec: (editor) => {
+    editor.paste();
   }
 });

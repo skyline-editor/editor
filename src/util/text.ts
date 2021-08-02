@@ -13,10 +13,11 @@ const write_modes = {
   'Delete': ['delete', 1],
   'Tab': ['insert', ' '.repeat(tab_size)],
   'Enter': ['insert', '\n'],
+  'Paste': ['insert', ''],
 } as {[key: string]: write_mode};
 
-function addTextCursor(editor: Editor, key: string, cursor: Cursor, affected: Cursor[]) : string {
-  if (key.length > 1 && !(key in write_modes)) return editor.code;
+async function addTextCursor(editor: Editor, key: string, cursor: Cursor, affected: Cursor[]) : Promise<unknown> {
+  if (key.length > 1 && !(key in write_modes)) return;
 
   let [mode, ...args] = ['insert', key] as write_mode;
   if (key in write_modes) [mode, ...args] = write_modes[key];
@@ -31,7 +32,7 @@ function addTextCursor(editor: Editor, key: string, cursor: Cursor, affected: Cu
     selection.destroy();
     editor.selections.splice(editor.selections.indexOf(selection), 1);
 
-    if (mode === 'delete') return editor.code;
+    if (mode === 'delete') return;
   }
 
   cursor.validate(false, { column: true });
@@ -107,10 +108,7 @@ function addTextCursor(editor: Editor, key: string, cursor: Cursor, affected: Cu
       ];
       
       const nextChar = line[cursor.column];
-      if (nextChar && skip.includes(nextChar)) {
-        cursor.column += 1;
-        return lines.join('\n');
-      }
+      if (nextChar && skip.includes(nextChar)) return cursor.column += 1;
     }
     
     if (key === ' ') {
@@ -124,7 +122,14 @@ function addTextCursor(editor: Editor, key: string, cursor: Cursor, affected: Cu
       ];
       
       if (nextChar && prevChar && spacing.includes(t)) extra = ' ';
-    }  
+    }
+
+    if (key === 'Paste') {
+      if (!navigator.clipboard) {
+        return console.error('Clipboard API not present');
+      }
+      extra = await navigator.clipboard.readText();
+    }
 
     
     if (text === '(') extra = ')';
@@ -154,7 +159,7 @@ function addTextCursor(editor: Editor, key: string, cursor: Cursor, affected: Cu
     });
   }
   
-  return editor.code = lines.join('\n');
+  editor.code = lines.join('\n');
 }
 
 export function addText(editor: Editor, key: string) : void {
