@@ -7,6 +7,7 @@ import { addText } from "./util/text";
 import moveShortcuts from './shortcuts/move';
 import copyLineShortcuts from './shortcuts/copyLine';
 import copyCursorShortcuts from './shortcuts/copyCursor';
+import { defaultLanguage, Language } from "./language";
 
 export const Char = {
   width: 11,
@@ -59,99 +60,87 @@ export class EventController {
     this.editor.render();
   }
   public onMouseDown(event: MouseEvent): void {
-    event.preventDefault();  
-    const lines = this.editor.lines;
-    const editor = this.editor.canvas;
+    event.preventDefault();
 
-    if (!editor) return;
-
-    const x = event.clientX - editor.getBoundingClientRect().left;
-    const y = event.clientY - editor.getBoundingClientRect().top;
-
-    const cursor = new Cursor(this.editor, Math.floor(y / Char.height), Math.floor(x / Char.width)).validate(false);
-    if (cursor.line < 0) {
-      cursor.line = 0;
-      cursor.column = 0;
-    }
-
-    if (cursor.line >= lines.length) {
-      cursor.line = lines.length;
-      cursor.column = lines[cursor.line].length;
-    }
-
-    if (cursor.column < 0) cursor.column = 0;
-    if (cursor.column > lines[cursor.line].length) cursor.column = lines[cursor.line].length;
+    const cursor = this.getCursorFromEvent(event);
 
     if (event.altKey) {
+      for (let i = 0; i < this.editor.cursors.length; i++) {
+        const c = this.editor.cursors[i];
+        if (cursor.line === c.line && cursor.column === c.column) {
+          this.editor.cursors.splice(i, 1);
+          break;
+        }
+      }
       this.editor.cursors.push(cursor);
     } else {
+      this.editor.selections.map(v => v.destroy());
+      this.editor.selections = [];
       this.editor.cursors = [cursor];
-    }
+    };
 
-    this.editor.cursors = this.editor.cursors.filter((cursor, i) => {
-      cursor = cursor.validate();
-      return !this.editor.cursors.find((v, j) => {
-        v = v.validate();
-        if (i === j) return false;
-        return v.line === cursor.line && v.column === cursor.column
-      });
-    });
-
-    this.editor.startSelection(cursor);
-    this.editor.selections.map(v => v.destroy());
-    this.editor.selections = [ new Selection(this.editor, cursor) ];
+    this.startSelection(cursor);
     this.editor.render();
   }
   public onMouseMove(event: MouseEvent): void {
     event.preventDefault();
-
-    const lastCursor = this.editor.getSelection();
-    if (!lastCursor) return;
+    if (!this.activeSelection) return;
 
     if (event.button != 0 || event.buttons < 1) {
-      this.editor.activeSelection = null;
+      this.activeSelection = null;
       return;
     }
 
-    const lines = this.editor.lines;
-    const editor = this.editor.canvas;
+    const cursor = this.getCursorFromEvent(event);
 
-    if (!editor) return;
-
-    const x = event.clientX - editor.getBoundingClientRect().left;
-    const y = event.clientY - editor.getBoundingClientRect().top;
-
-    const cursor = new Cursor(this.editor, Math.floor(y / Char.height), Math.floor(x / Char.width)).validate(false);
-    if (cursor.line < 0) {
-      cursor.line = 0;
-      cursor.column = 0;
-    }
-
-    if (cursor.line >= lines.length) {
-      cursor.line = lines.length;
-      cursor.column = lines[cursor.line].length;
-    }
-
-    if (cursor.column < 0) cursor.column = 0;
-    if (cursor.column > lines[cursor.line].length) cursor.column = lines[cursor.line].length;
-
-    const new_cursors = [lastCursor, cursor].sort(Cursor.compare) as [Cursor, Cursor];
-    const selection = new Selection(this.editor, ...new_cursors);
-
-    this.editor.cursors.splice(this.editor.cursors.length - 1, 1, cursor);
-    this.editor.selections.map(v => v.destroy());
-    this.editor.selections = [ selection ];
+    this.editLastSelection(cursor);
+    this.replaceLastCursor(cursor);
     this.editor.render();
   }
   public onMouseUp(event: MouseEvent): void {
     event.preventDefault();
+    if (!this.activeSelection) return;
 
-    const lastCursor = this.editor.getSelection();
-    if (!lastCursor) return;
+    const cursor = this.getCursorFromEvent(event);
 
+    this.replaceLastCursor(cursor);
+    this.endSelection(cursor);
+    this.editor.render();
+  }
+
+
+  public activeSelection: Cursor | null = null;
+  constructor(editor: Editor) {
+    this.editor = editor;
+  }
+
+  private startSelection(cursor: Cursor) {
+    this.activeSelection = cursor;
+    this.editor.selections.push(new Selection(this.editor, cursor));
+  }
+
+  private endSelection(cursor: Cursor) {
+    this.activeSelection = null;
+    const same = cursor.line === this.activeSelection.line && cursor.column === this.activeSelection.column;
+    if (same) return;
+
+    this.editLastSelection(cursor);
+  }
+
+  private editLastSelection(cursor: Cursor) {
+    const selection = new Selection(this.editor, this.activeSelection, cursor).validate();
+    
+    this.editor.selections.pop().destroy();
+    this.editor.selections.push(selection);
+  }
+  private replaceLastCursor(cursor: Cursor) {
+    this.editor.cursors.pop();
+    this.editor.cursors.push(cursor);
+  }
+
+  private getCursorFromEvent(event: MouseEvent): Cursor {
     const lines = this.editor.lines;
     const editor = this.editor.canvas;
-
     if (!editor) return;
 
     const x = event.clientX - editor.getBoundingClientRect().left;
@@ -171,65 +160,66 @@ export class EventController {
     if (cursor.column < 0) cursor.column = 0;
     if (cursor.column > lines[cursor.line].length) cursor.column = lines[cursor.line].length;
 
-    const selection = new Selection(this.editor, lastCursor, cursor).validate();
-    const same = cursor.line === lastCursor.line && cursor.column === lastCursor.column;
-
-    this.editor.cursors.splice(this.editor.cursors.length - 1, 1, cursor);
-    this.editor.selections.map(v => v.destroy());
-    this.editor.selections = [ selection ];
-    this.editor.endSelection(cursor, same);
-    this.editor.render();
-  }
-
-
-  constructor(editor: Editor) {
-    this.editor = editor;
+    return cursor;
   }
 }
 
 export class Editor {
-  public code: string;
-  public language: string;
-
   public cursors: Cursor[] = [];
   public selections: Selection[] = [];
 
-  private tokenized: ColoredText[][] = [];
-  public activeSelection: Cursor | null = null;
-
-  public canvas: HTMLCanvasElement | null = null;
-  private eventController: EventController;
+  private _code: string = '';
+  private _tokenized: ColoredText[][] = [];
+  private _language: Language = defaultLanguage;
+  
+  private _canvas: HTMLCanvasElement | null = null;
+  private eventController: EventController = new EventController(this);
 
   private shouldRender: boolean = false;
   private cursorClock: NodeJS.Timer;
 
-  constructor(code?: string, language?: string) {
-    this.eventController = new EventController(this);
-
-    // TODO: make this more customizable
-    this.code = code ?? '';
-    this.language = language ?? 'typescript';
-
-    this.tokenize();
+  constructor(code?: string) {
+    if (code) this.code = code;
     this.cursorClock = setInterval(this.tick.bind(this), 500);
   }
 
-  public startSelection(cursor: Cursor) {
-    this.activeSelection = cursor;
+  get code() {
+    return this._code;
   }
 
-  public getSelection() {
-    return this.activeSelection;
+  get canvas() {
+    return this._canvas;
   }
 
-  public endSelection(cursor: Cursor, same: boolean) {
-    if (same) this.selections.map(v => v.destroy());
-    this.selections = same ? [] : this.selections;
-    this.activeSelection = null;
+  get tokenized() {
+    return this._tokenized;
+  }
+
+  get language() {
+    return this._language;
+  }
+
+  set code(value) {
+    this.setCode(value);
+  }
+
+  set language(value) {
+    this.setLanguage(value);
+  }
+
+  public setCode(code: string): void {
+    this._code = code;
+    this.tokenize();
+    this.render();
+  }
+  public setLanguage(language: Language): void {
+    this._language = language;
+    this.tokenize();
+    this.render();
   }
 
   public mount(canvas: HTMLCanvasElement) {
-    this.canvas = canvas;
+    this._canvas = canvas;
 
     window.addEventListener('resize', this.resize.bind(this));
     window.addEventListener('blur', this.eventController.onBlur.bind(this.eventController));
@@ -244,7 +234,7 @@ export class Editor {
   }
 
   public tokenize() {
-    this.tokenized = highlight(this.code, this.language);
+    this._tokenized = highlight(this.code, this.language);
     return this.tokenized;
   }
 

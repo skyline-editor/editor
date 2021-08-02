@@ -9,7 +9,7 @@ export interface ArrayToken {
   pos?: number;
 }
 export type Token = ValueToken | ArrayToken | string;
-import languages from './languages';
+import { Language } from './language';
 
 
 const colors = {
@@ -30,7 +30,7 @@ export interface ColoredText {
   color: string;
 }
 
-export function highlight(code: string, language: string) {
+export function highlight(code: string, language: Language) {
   const tokens = tokenize(code, language);
   const html = codeFromTokens(tokens);
   return html;
@@ -95,9 +95,8 @@ function tokenize_raw(code: string) : string[] {
   return tokens;
 }
 
-export function tokenize(code: string, language: string) {
-  const tokenizer = languages[language];
-  if (typeof tokenizer === 'undefined') throw new Error(`Language ${language} not found`);
+export function tokenize(code: string, language: Language) {
+  const tokenizer = language.tokenize;
 
   const tokens = tokenize_raw(code);
   const new_tokens: Token[] = tokenizer(code, tokens);
