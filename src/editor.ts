@@ -221,7 +221,7 @@ export class Editor {
     this.events.once(event, handler);
   }
 
-  public save() {
+  public save(): void {
     this.events.emit('save', this);
   }
 
@@ -259,11 +259,11 @@ export class Editor {
     return this._language;
   }
 
-  set code(value) {
+  set code(value: string) {
     this.setCode(value);
   }
 
-  set language(value) {
+  set language(value: Language) {
     this.setLanguage(value);
   }
 
@@ -278,7 +278,7 @@ export class Editor {
     this.render();
   }
 
-  public mount(canvas: HTMLCanvasElement) {
+  public mount(canvas: HTMLCanvasElement): void {
     this._canvas = canvas;
 
     window.addEventListener('resize', this.resize.bind(this));
@@ -298,14 +298,14 @@ export class Editor {
     return this.tokenized;
   }
 
-  public render() {
+  public render(): void {
     if (!this.canvas) return;
 
     this.shouldRender = true;
     requestAnimationFrame(this.renderAll.bind(this));
   }
 
-  public resize() {
+  public resize(): void {
     if (!this.canvas) return;
 
     const dpr = window.devicePixelRatio ?? 1;
@@ -316,7 +316,7 @@ export class Editor {
     this.render();
   }
 
-  public resetCursorClock() {
+  public resetCursorClock(): void {
     if (this.cursorClock) clearInterval(this.cursorClock);
     this.cursorClock = setInterval(this.tick.bind(this), 500);
   }
@@ -410,7 +410,7 @@ export class Editor {
     }
   }
 
-  set lines(value) {
+  set lines(value: string[]) {
     this.code = value.join('\n');
   }
 

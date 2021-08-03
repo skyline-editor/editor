@@ -17,7 +17,7 @@ export class Selection {
     this.editor = editor;
   }
 
-  destroy() {
+  destroy(): void {
     this.start.selection = null;
     this.end.selection = null;
 
