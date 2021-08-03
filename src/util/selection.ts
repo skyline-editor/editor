@@ -29,7 +29,7 @@ export class Selection {
     return new Selection(this.editor, this.start, this.end);
   }
 
-  validate(clone: boolean = false): Selection {
+  validate(clone = false): Selection {
     if (clone) return this.clone().validate(false);
 
     if (this.start.line === this.end.line) {
