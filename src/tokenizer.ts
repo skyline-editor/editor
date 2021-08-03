@@ -9,7 +9,9 @@ export interface ArrayToken {
   pos?: number;
 }
 export type Token = ValueToken | ArrayToken | string;
+import { Editor } from './editor';
 import { Language } from './language';
+import { Cursor } from './util/cursor';
 
 
 const colors = {
@@ -104,9 +106,41 @@ export function highlight(code: string, language: Language) {
   return html;
 }
 
-// TODO: implement this for continous tokenization
-/*
-function getTokenFromPos(tokens: Token[], pos: number) {
+export function getTokenFromPos(editor: Editor, cursor: Cursor, tokens?: string[]) {
+  tokens = tokens ?? tokenize_raw(editor.code);
 
+  let line = 0;
+  let column = 0;
+
+  for (let i = 0; i < tokens.length; i++) {
+    let token = tokens[i];
+    if (token === '\n') {
+      line++;
+      column = 0;
+    } else {
+      column += token.length;
+    }
+
+    if (line > cursor.line || (line === cursor.line && (column > cursor.column || column === cursor.column))) {
+      if (/\W/.test(token)) {
+        i++;
+        token = tokens[i];
+        if (/\W/.test(token)) break;
+      } else {
+        column -= token.length;
+      }
+
+
+      return {
+        i,
+        token,
+
+        line,
+        column,
+
+        tokens
+      };
+    }
+  }
+  return null;
 }
-*/
