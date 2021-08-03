@@ -37,7 +37,6 @@ export class EventController {
   }
   public onKeyDown(event: KeyboardEvent): void {
     if (this.editor.cursors.length < 1) return;
-    event.preventDefault();
 
     for (const keyboardShortcut of keyboardShortcuts) {
       const { exec } = keyboardShortcut;
@@ -53,10 +52,15 @@ export class EventController {
 
       exec(this.editor, event);
       
+      event.preventDefault();
       this.editor.tokenize();
       this.editor.render();
       return;
     }
+
+    if (event.ctrlKey || event.metaKey || event.altKey) return; 
+
+    event.preventDefault();
 
     addText(this.editor, event.key);
 
