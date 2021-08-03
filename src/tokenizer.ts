@@ -30,11 +30,31 @@ export interface ColoredText {
   color: string;
 }
 
-export function highlight(code: string, language: Language) {
-  const tokens = tokenize(code, language);
-  const html = codeFromTokens(tokens);
-  return html;
+function tokenize_raw(code: string) : string[] {
+  const tokens: string[] = [];
+  const matches = code.matchAll(/\W/g);
+
+  let current_token = 0;
+  for (const match of matches) {
+    const i = match.index;
+
+    if (current_token != i) tokens.push(code.slice(current_token, i));
+    tokens.push(match[0]);
+    current_token = i + 1;
+  }
+
+  if (current_token < code.length) tokens.push(code.slice(current_token))
+  return tokens;
 }
+
+export function tokenize(code: string, language: Language) {
+  const tokenizer = language.tokenize;
+
+  const tokens = tokenize_raw(code);
+  const new_tokens: Token[] = tokenizer(code, tokens);
+  return new_tokens;
+}
+
 
 function getElemsFromTokens(tokens: Token[]) {
   const elems: ColoredText[] = [];
@@ -78,29 +98,10 @@ export function codeFromTokens(tokens: Token[]) {
   return lines;
 }
 
-function tokenize_raw(code: string) : string[] {
-  const tokens: string[] = [];
-  const matches = code.matchAll(/\W/g);
-
-  let current_token = 0;
-  for (const match of matches) {
-    const i = match.index;
-
-    if (current_token != i) tokens.push(code.slice(current_token, i));
-    tokens.push(match[0]);
-    current_token = i + 1;
-  }
-
-  if (current_token < code.length) tokens.push(code.slice(current_token))
-  return tokens;
-}
-
-export function tokenize(code: string, language: Language) {
-  const tokenizer = language.tokenize;
-
-  const tokens = tokenize_raw(code);
-  const new_tokens: Token[] = tokenizer(code, tokens);
-  return new_tokens;
+export function highlight(code: string, language: Language) {
+  const tokens = tokenize(code, language);
+  const html = codeFromTokens(tokens);
+  return html;
 }
 
 // TODO: implement this for continous tokenization
