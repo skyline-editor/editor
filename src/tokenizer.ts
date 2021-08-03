@@ -103,6 +103,9 @@ export function tokenize(code: string, language: Language) {
   return new_tokens;
 }
 
+// TODO: implement this for continous tokenization
+/*
 function getTokenFromPos(tokens: Token[], pos: number) {
 
 }
+*/

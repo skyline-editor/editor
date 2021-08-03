@@ -9,7 +9,6 @@ import copyLineShortcuts from './shortcuts/copyLine';
 import copyCursorShortcuts from './shortcuts/copyCursor';
 import { defaultLanguage, Language } from "./language";
 import { EventEmitter } from "events";
-import { isEmptyBindingPattern } from "typescript";
 
 export const Char = {
   width: 11,
@@ -32,7 +31,7 @@ const keyboardShortcuts: KeyboardShortcut[] = [];
 export class EventController {
   private editor: Editor;
 
-  public onBlur(_event: FocusEvent): void {
+  public onBlur(): void {
     this.editor.cursors = [];
     this.editor.render();
   }
