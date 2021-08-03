@@ -2,7 +2,7 @@ import { Editor, KeyboardShortcut } from "../editor";
 import { Selection } from "../util/selection";
 const shortcuts: KeyboardShortcut[] = [];
 
-function moveCursors(editor: Editor, change?: { line?: number, column?: number }, shift: boolean = false) : void {
+function moveCursors(editor: Editor, change?: { line?: number, column?: number }, shift = false) : void {
   editor.resetCursorClock();
   if (shift) {
     editor.cursors.map(cursor => {

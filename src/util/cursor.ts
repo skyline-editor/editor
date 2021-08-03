@@ -5,7 +5,7 @@ export class Cursor {
   public line: number;
   public column: number;
   public selection?: Selection;
-  public visible: boolean = true;
+  public visible = true;
 
   private editor: Editor;
 
