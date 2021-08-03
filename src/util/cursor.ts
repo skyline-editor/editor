@@ -85,7 +85,7 @@ export class Cursor {
     return Cursor.compare(this, other);
   }
 
-  static compare(a: Cursor, b: Cursor): number {
+  static compare(this: void, a: Cursor, b: Cursor): number {
     if (a.line < b.line) return -1;
     if (a.line > b.line) return 1;
     if (a.column < b.column) return -1;
