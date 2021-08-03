@@ -199,6 +199,9 @@ export class Editor {
   public cursors: Cursor[] = [];
   public selections: Selection[] = [];
 
+  public scrollX = 0;
+  public scrollY = 0;
+
   private events = new EventEmitter();
 
   private _code = '';
@@ -336,6 +339,7 @@ export class Editor {
     context.font = '20px Consolas';
     context.textBaseline = 'top';
     context.scale(dpr, dpr);
+    context.translate(-this.scrollX, -this.scrollY);
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -351,17 +355,25 @@ export class Editor {
     const context = this.canvas.getContext('2d');
     const lines = this.tokenized;
 
-    for (let i = 0; i < lines.length; i++) {
+    const startLine = Math.max(0, Math.floor(this.scrollY / Char.height));
+    const endLine = Math.min(lines.length, Math.ceil((this.scrollY + this.canvas.height) / Char.height));
+
+    for (let i = startLine; i < endLine; i++) {
       const line = lines[i];
       let pos = 0;
 
-      for (let j = 0; j < line.length; j++) {
-        const token = line[j];
-        const x = pos * Char.width;
-        const y = i * Char.height;
+      const startColumn = Math.max(0, Math.floor(this.scrollX / Char.width));
+      const endColumn = Math.min(line.length, Math.ceil((this.scrollX + this.canvas.width) / Char.width));
 
-        context.fillStyle = token.color;
-        context.fillText(token.text, x, y);
+      for (let j = 0; j < endColumn; j++) {
+        const token = line[j];
+        if (j >= startColumn) {
+          const x = pos * Char.width;
+          const y = i * Char.height;
+
+          context.fillStyle = token.color;
+          context.fillText(token.text, x, y);
+        }
 
         pos += token.text.length;
       }
@@ -400,15 +412,15 @@ export class Editor {
       const selection = selections[i];
       const length = selection.end.line - selection.start.line;
 
-      for (let i = 0; i <= length; i++) {
-        const line = selection.start.line + i;
+      for (let j = 0; j <= length; j++) {
+        const line = selection.start.line + j;
 
-        const x = i < 1 ? selection.start.column * Char.width : 0;
+        const x = j < 1 ? selection.start.column * Char.width : 0;
         const y = line * Char.height;
 
         const endX = line == selection.end.line ? selection.end.column * Char.width : (this.lines[line].length + 1) * Char.width;
 
-        context.fillRect(x, y, endX - x, Char.height);
+        context.fillRect(x, y, Math.min(endX, this.canvas.width) - x, Char.height);
       }
     }
   }
