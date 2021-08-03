@@ -243,31 +243,29 @@ export class Editor {
   public paste(): void {
     addText(this, 'Paste');
   }
-
-  get code() {
-    return this._code;
-  }
-
+  
   get canvas() {
     return this._canvas;
   }
-
+  
   get tokenized() {
     return this._tokenized;
+  }
+  
+  get code() {
+    return this._code;
+  }
+  set code(value: string) {
+    this.setCode(value);
   }
 
   get language() {
     return this._language;
   }
-
-  set code(value: string) {
-    this.setCode(value);
-  }
-
   set language(value: Language) {
     this.setLanguage(value);
   }
-
+  
   public setCode(code: string): void {
     this._code = code;
     this.tokenize();
