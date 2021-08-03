@@ -170,7 +170,7 @@ export function addText(editor: Editor, key: string) : void {
 
   for (let i = 0; i < editor.cursors.length; i++) {
     const cursor = editor.cursors[i];
-    addTextCursor(editor, key, cursor, editor.cursors.slice(i + 1));
+    addTextCursor(editor, key, cursor, editor.cursors.slice(i + 1)).catch(v => console.error(v));
   }
 
   editor.cursors = editor.cursors.filter((cursor, i) => {

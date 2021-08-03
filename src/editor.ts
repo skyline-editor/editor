@@ -226,12 +226,14 @@ export class Editor {
 
   public copy(): void {
     if (!navigator.clipboard) return console.error('Clipboard API not present');
-    navigator.clipboard.writeText(this.cursors.sort(Cursor.compare).filter(v => v.selection).map(v => v.selection.getText()).join('\n'));
+    const text = this.cursors.sort(Cursor.compare).filter(v => v.selection).map(v => v.selection.getText()).join('\n');
+    navigator.clipboard.writeText(text).catch(v => console.error(v));
   }
 
   public cut(): void {
     if (!navigator.clipboard) return console.error('Clipboard API not present');
-    navigator.clipboard.writeText(this.cursors.sort(Cursor.compare).filter(v => v.selection).map(v => v.selection.getText()).join('\n'));
+    const text = this.cursors.sort(Cursor.compare).filter(v => v.selection).map(v => v.selection.getText()).join('\n');
+    navigator.clipboard.writeText(text).catch(v => console.error(v));
     this.cursors.sort(Cursor.compare).filter(v => v.selection).map(v => v.selection.setText(''));
 
     this.selections.map(v => v.destroy());
