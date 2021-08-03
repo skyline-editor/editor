@@ -197,14 +197,14 @@ export class Editor {
 
   private events = new EventEmitter();
 
-  private _code: string = '';
+  private _code = '';
   private _tokenized: ColoredText[][] = [];
   private _language: Language = defaultLanguage;
   
   private _canvas: HTMLCanvasElement | null = null;
   private eventController: EventController = new EventController(this);
 
-  private shouldRender: boolean = false;
+  private shouldRender = false;
   private cursorClock: NodeJS.Timer;
 
   constructor(code?: string) {
