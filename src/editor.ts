@@ -58,7 +58,7 @@ export class EventController {
       return;
     }
 
-    if (event.ctrlKey || event.metaKey || event.altKey) return; 
+    if (event.ctrlKey || event.metaKey) return; 
 
     event.preventDefault();
 
