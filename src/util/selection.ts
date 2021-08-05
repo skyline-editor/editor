@@ -43,18 +43,14 @@ export class Selection {
       if (!selection) continue;
 
       if (selection.isEmpty()) {
-        selection.destroy();
+        sels.push(selection);
         continue;
       }
 
       for (let j = i + 1; j < selections.length; j++) {
         const other = selections[j];
         if (!other) continue;
-        if (other.isEmpty()) {
-          other.destroy();
-          selections[j] = null;
-          continue;
-        }
+        if (other.isEmpty()) continue;
 
         const intersected = Selection.intersect(editor, selection, other);
         if (intersected) {
