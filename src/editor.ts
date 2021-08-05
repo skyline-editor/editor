@@ -170,10 +170,12 @@ export class EventController {
     const editor = this.editor.canvas;
     if (!editor) return;
 
-    const x = event.clientX - editor.getBoundingClientRect().left;
-    const y = event.clientY - editor.getBoundingClientRect().top;
+    const x = event.clientX - editor.getBoundingClientRect().left + window.scrollX;
+    const y = event.clientY - editor.getBoundingClientRect().top + window.scrollY - (this.editor.lineSpacing / 2);
 
-    const cursor = new Cursor(this.editor, Math.floor(y / Char.height), Math.floor(x / Char.width));
+    const xOffset = this.editor.renderLinenumbers ? 55 : 0;
+
+    const cursor = new Cursor(this.editor, Math.floor(y / (Char.height + this.editor.lineSpacing)), Math.floor((x - xOffset) / Char.width));
     if (cursor.line < 0) {
       cursor.line = 0;
       cursor.column = 0;
@@ -198,6 +200,9 @@ interface Events {
 export class Editor {
   public cursors: Cursor[] = [];
   public selections: Selection[] = [];
+
+  public renderLinenumbers: boolean = true;
+  public lineSpacing: number = 5;
 
   public scrollX = 0;
   public scrollY = 0;
@@ -299,6 +304,31 @@ export class Editor {
     this.resize();
   }
 
+  public unmount() {
+    window.removeEventListener('resize', this.resize.bind(this));
+    window.removeEventListener('blur', this.eventController.onBlur.bind(this.eventController));
+    window.removeEventListener('keydown', this.eventController.onKeyDown.bind(this.eventController));
+    window.removeEventListener('mousemove', this.eventController.onMouseMove.bind(this.eventController));
+    window.removeEventListener('mouseup', this.eventController.onMouseUp.bind(this.eventController));
+
+    this.canvas.removeEventListener('mousedown', this.eventController.onMouseDown.bind(this.eventController));
+    this.canvas.removeEventListener('resize', this.resize.bind(this));
+
+    this._canvas = null;
+  }
+
+  public destroy() {
+    this.unmount();
+    clearInterval(this.cursorClock);
+
+    this.cursors.map(v => v.destroy());
+    this.selections.map(v => v.destroy());
+    this.selections = [];
+
+    this.events.removeAllListeners();
+    this.cursorClock = null;
+  }
+
   public tokenize() {
     this._tokenized = highlight(this.code, this.language);
     return this.tokenized;
@@ -353,6 +383,8 @@ export class Editor {
   }
 
   private renderCode() {
+    const xOffset = this.renderLinenumbers ? 55 : 0;
+
     const context = this.canvas.getContext('2d');
     const lines = this.tokenized;
 
@@ -360,6 +392,14 @@ export class Editor {
     const endLine = Math.min(lines.length, Math.ceil((this.scrollY + this.canvas.height) / Char.height));
 
     for (let i = startLine; i < endLine; i++) {
+      const y = i * (Char.height + this.lineSpacing);
+      if (this.renderLinenumbers) {
+        const line_number_width = context.measureText((i + 1).toString()).width;
+
+        context.fillStyle = "#ffffff";
+        context.fillText((i + 1).toString(), (55 - line_number_width) / 2, y);
+      }
+
       const line = lines[i];
       let pos = 0;
 
@@ -370,10 +410,9 @@ export class Editor {
         const token = line[j];
         if (j >= startColumn) {
           const x = pos * Char.width;
-          const y = i * Char.height;
 
           context.fillStyle = token.color;
-          context.fillText(token.text, x, y);
+          context.fillText(token.text, x + xOffset - this.scrollX, y - this.scrollY);
         }
 
         pos += token.text.length;
@@ -389,6 +428,8 @@ export class Editor {
   }
 
   private renderCursors() {
+    const xOffset = this.renderLinenumbers ? 55 : 0;
+
     const context = this.canvas.getContext('2d');
     const cursors = this.cursors;
     
@@ -398,13 +439,15 @@ export class Editor {
       if (!cursor.visible) continue;
 
       const x = cursor.column * Char.width;
-      const y = cursor.line * Char.height;
+      const y = cursor.line * (Char.height + 5);
 
-      context.fillRect(x - 1, y, 2, Char.height);
+      context.fillRect(x - 1 + xOffset, y, 2, Char.height);
     }
   }
 
   private renderSelections() {
+    const xOffset = this.renderLinenumbers ? 55 : 0;
+
     const context = this.canvas.getContext('2d');
     const selections = this.selections;
 
@@ -417,11 +460,11 @@ export class Editor {
         const line = selection.start.line + j;
 
         const x = j < 1 ? selection.start.column * Char.width : 0;
-        const y = line * Char.height;
+        const y = line * (Char.height + 5);
 
         const endX = line == selection.end.line ? selection.end.column * Char.width : (this.lines[line].length + 1) * Char.width;
 
-        context.fillRect(x, y, Math.min(endX, this.canvas.width) - x, Char.height);
+        context.fillRect(x + xOffset, y, Math.min(endX, this.canvas.width) - x, Char.height);
       }
     }
   }
