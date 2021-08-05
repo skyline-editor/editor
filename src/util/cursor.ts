@@ -93,6 +93,38 @@ export class Cursor {
     return 0;
   }
 
+  disconnect() {
+    if (!this.connected) return;
+    this.editor.cursors.splice(this.editor.cursors.indexOf(this), 1);
+  }
+
+  connect() {
+    if (this.connected) return;
+    this.editor.cursors.push(this);
+  }
+
+  get connected() {
+    return this.editor.cursors.indexOf(this) >= 0;
+  }
+
+  destroy() {
+    this.disconnect();
+
+    this.editor = null;
+    this.line = null;
+    this.column = null;
+    this.selection = null;
+    this.visible = false
+  }
+
+  equals(other: Cursor): boolean {
+    return Cursor.equals(this, other);
+  }
+
+  static equals(a: Cursor, b: Cursor): boolean {
+    return a.line === b.line && a.column === b.column;
+  }
+
   move(change: { line?: number, column?: number }, clone?: boolean) : Cursor {
     clone = clone ?? true;
     if (clone) return this.clone().move(change, false);

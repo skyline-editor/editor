@@ -25,6 +25,91 @@ export class Selection {
     this.end = null;
   }
 
+  equals(other: Selection): boolean {
+    return Selection.equals(this, other);
+  }
+  
+  static equals(selection1: Selection, selection2: Selection): boolean {
+    return selection1.start.equals(selection2.start) && selection1.end.equals(selection2.end);
+  }
+
+  static intersectSelections(editor: Editor, selections: Selection[]): Selection[] {
+    selections = selections.slice();
+
+    const sels: Selection[] = [];
+
+    for (let i = 0; i < selections.length; i++) {
+      let selection = selections[i];
+      if (!selection) continue;
+
+      if (selection.isEmpty()) {
+        selection.destroy();
+        continue;
+      }
+
+      for (let j = i + 1; j < selections.length; j++) {
+        const other = selections[j];
+        if (!other) continue;
+        if (other.isEmpty()) {
+          other.destroy();
+          selections[j] = null;
+          continue;
+        }
+
+        const intersected = Selection.intersect(editor, selection, other);
+        if (intersected) {
+          selection = intersected;
+          selections[j] = null;
+          continue;
+        }
+      }
+
+      sels.push(selection);
+    }
+
+    return sels;
+  }
+
+  static intersect(editor: Editor, selection1: Selection, selection2: Selection): Selection {
+    selection1 = selection1.validate(true);
+    selection2 = selection2.validate(true);
+
+    if (selection1.isEmpty() || selection2.isEmpty()) return null;
+    if (Cursor.compare(selection1.end, selection2.start) < 0) return null;
+    if (Cursor.compare(selection2.end, selection1.start) < 0) return null;
+
+    const start = Cursor.compare(selection1.start, selection2.start) < 0 ? selection1.start : selection2.start;
+    const end = Cursor.compare(selection1.end, selection2.end) < 0 ? selection1.end : selection2.start;
+
+    let connected: 'start' | 'end' = null;
+    if (start.connected && !end.connected) connected = 'start';
+    if (!start.connected && end.connected) connected = 'end';
+
+    if (start.connected && end.connected) {
+      if (Cursor.compare(selection1.start, selection2.start) >= 0) connected = 'start';
+      if (Cursor.compare(selection1.end, selection2.end) >= 0) connected = 'end';
+    }
+    if (!connected) connected = 'end';
+
+    selection1.start.disconnect();
+    selection2.start.disconnect();
+
+    selection1.end.disconnect();
+    selection2.end.disconnect();
+
+    if (connected === 'start') start.connect();
+    if (connected === 'end') end.connect();
+
+    selection1.destroy();
+    selection2.destroy();
+
+    return new Selection(editor, start, end);
+  }
+
+  isEmpty(): boolean {
+    return this.start.equals(this.end);
+  }
+
   clone() {
     return new Selection(this.editor, this.start, this.end);
   }

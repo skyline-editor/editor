@@ -307,6 +307,7 @@ export class Editor {
   public render(): void {
     if (!this.canvas) return;
 
+    this.selections = Selection.intersectSelections(this, this.selections);
     this.shouldRender = true;
     requestAnimationFrame(this.renderAll.bind(this));
   }
@@ -330,7 +331,7 @@ export class Editor {
   private renderAll() {
     const dpr = window.devicePixelRatio ?? 1;
 
-    // if (!this.shouldRender) return;
+    if (!this.shouldRender) return;
 
     const canvas = this.canvas;
     const context = canvas.getContext('2d');
