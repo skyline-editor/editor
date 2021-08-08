@@ -1,4 +1,4 @@
-import { KeyboardShortcut } from "../editor";
+import { KeyboardShortcut } from ".";
 import { Cursor } from "../util/cursor";
 const shortcuts: KeyboardShortcut[] = [];
 
