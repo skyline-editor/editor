@@ -128,6 +128,36 @@ async function addTextCursor(editor: Editor, key: string, cursor: Cursor, affect
       
       if (nextChar && prevChar && spacing.includes(t)) extra = ' ';
     }
+    if (text === '\n') {
+      const nextChar = line[cursor.column];
+      const prevChar = line[cursor.column - 1];
+      const t = prevChar + nextChar;
+      const spacing = [
+        '{}',
+        '[]',
+        '()',
+      ];
+      
+      const text = '\n' + ' '.repeat(tab_size) + '\n';
+      if (nextChar && prevChar && spacing.includes(t)) {
+        const lineText = line.substring(0, column);
+        const lineEnd = line.substring(column);
+
+        const newLine = lineText + text + lineEnd;
+        lines.splice(cursor.line, 1, newLine);
+
+        cursor.line++;
+        cursor.column = tab_size;
+
+        affected.map(v => {
+          if (v.line === cursor.line - 1) v.column -= lineText.length;
+          v.line += 2;
+        });
+
+        editor.code = lines.join('\n');
+        return;
+      }
+    }
 
     if (text === '(') extra = ')';
     if (text === '{') extra = '}';
@@ -151,7 +181,12 @@ async function addTextCursor(editor: Editor, key: string, cursor: Cursor, affect
     }
 
     affected.map(v => {
-      if (text === '\n') return v.line++;
+      if (text === '\n') {
+        v.line++;
+        if (v.line === cursor.line) v.column -= lineText.length;
+
+        return;
+      }
       v.column += v.line === cursor.line ? text.length : 0
     });
   }
