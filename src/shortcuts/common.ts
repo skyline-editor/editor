@@ -1,4 +1,5 @@
 import { KeyboardShortcut } from ".";
+import { getTokenFromPos } from "../tokenizer";
 import { Cursor } from "../util/cursor";
 import { Selection } from "../util/selection";
 import { addText } from "../util/text";
@@ -76,6 +77,29 @@ shortcuts.push({
   ctrl: true,
   exec: (editor) => {
     editor.save();
+  }
+});
+shortcuts.push({
+  name: 'Next Match',
+  description: 'selects the current token',
+
+  key: 'd',
+  ctrl: true,
+  exec: (editor) => {
+    for (let i = 0; i < editor.cursors.length; i++) {
+      const cursor = editor.cursors[i];
+      if (cursor.selection) continue;
+
+      const match = getTokenFromPos(editor, cursor);
+      if (!match) continue;
+
+      cursor.line = match.line;
+      cursor.column = match.column + match.token.length;
+
+      const selection = new Selection(editor, new Cursor(editor, match.line, match.column), cursor);
+      editor.selections.push(selection);
+    }
+    editor.render();
   }
 });
 

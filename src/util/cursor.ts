@@ -103,6 +103,15 @@ export class Cursor {
     this.editor.cursors.push(this);
   }
 
+  get pos() {
+    let pos = 0;
+    const lines = this.editor.lines;
+    for (let i = 0; i < this.line; i++) pos += lines[i].length;
+    pos += this.column;
+
+    return pos;
+  }
+
   get connected() {
     return this.editor.cursors.indexOf(this) >= 0;
   }
