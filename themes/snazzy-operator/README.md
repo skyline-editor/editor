@@ -1,0 +1,1 @@
+the Snazzy Operator Theme plugin for skyline-editor
