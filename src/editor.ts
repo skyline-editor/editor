@@ -7,6 +7,7 @@ import { addText } from "./util/text";
 import { defaultLanguage, Language } from "./language";
 import { EventEmitter } from "events";
 import { EventController } from "./events";
+import { Theme } from "./util/theme";
 
 export const Char = {
   width: 11,
@@ -32,7 +33,9 @@ export class Editor {
 
   private _code = '';
   private _tokenized: ColoredText[][] = [];
-  private _language: Language = defaultLanguage;
+
+  private _language: Language;
+  private _theme: Theme;
   
   private _canvas: HTMLCanvasElement | null = null;
   private eventController: EventController = new EventController(this);
@@ -98,6 +101,13 @@ export class Editor {
   set language(value: Language) {
     this.setLanguage(value);
   }
+
+  get theme() {
+    return this._theme;
+  }
+  set theme(value: Theme) {
+    this.setTheme(value);
+  }
   
   public setCode(code: string): void {
     this._code = code;
@@ -106,6 +116,11 @@ export class Editor {
   }
   public setLanguage(language: Language): void {
     this._language = language;
+    this.tokenize();
+    this.render();
+  }
+  public setTheme(theme: Theme): void {
+    this._theme = theme;
     this.tokenize();
     this.render();
   }
@@ -151,7 +166,7 @@ export class Editor {
   }
 
   public tokenize() {
-    this._tokenized = highlight(this.code, this.language);
+    this._tokenized = highlight(this.code, this.language, this.theme);
     return this.tokenized;
   }
 
@@ -191,9 +206,14 @@ export class Editor {
     context.font = '20px Consolas';
     context.textBaseline = 'top';
     context.scale(dpr, dpr);
-    context.translate(-this.scrollX, -this.scrollY);
+    context.translate(-this.scrollX, -this.scrollY + 5);
 
     context.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (this.theme?.colors?.background) {
+      context.fillStyle = this.theme.colors.background;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     this.renderSelections();
     this.renderCode();
@@ -217,7 +237,7 @@ export class Editor {
       if (this.renderLinenumbers) {
         const line_number_width = context.measureText((i + 1).toString()).width;
 
-        context.fillStyle = "#ffffff";
+        context.fillStyle = this.theme?.colors?.lineNumber ?? '#ffffff';
         context.fillText((i + 1).toString(), (55 - line_number_width) / 2, y);
       }
 
@@ -254,7 +274,7 @@ export class Editor {
     const context = this.canvas.getContext('2d');
     const cursors = this.cursors;
     
-    context.fillStyle = '#EE5078';
+    context.fillStyle = this.theme?.colors?.cursor ?? '#515052';
     for (let i = 0; i < cursors.length; i++) {
       const cursor = cursors[i].validate();
       if (!cursor.visible) continue;
@@ -272,7 +292,7 @@ export class Editor {
     const context = this.canvas.getContext('2d');
     const selections = this.selections;
 
-    context.fillStyle = '#3c6487';
+    context.fillStyle = this.theme?.colors?.selection ?? '#3c6487';
     for (let i = 0; i < selections.length; i++) {
       const selection = selections[i];
       const length = selection.end.line - selection.start.line;

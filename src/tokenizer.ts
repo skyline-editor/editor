@@ -12,20 +12,7 @@ export type Token = ValueToken | ArrayToken | string;
 import { Editor } from './editor';
 import { Language } from './language';
 import { Cursor } from './util/cursor';
-
-
-const colors = {
-  string: '#C9FFD8',
-  number: '#E1C9FF',
-  operator: '#FF79C6',
-  boolean: '#9A92FF',
-  static: '#9A92FF',
-  keyword: '#79CFFF',
-  variable: '#83ADFF',
-  propery: '#83ADFF',
-  comment: '#46667E',
-  normal: '#f8f8f2'
-};
+import { Theme } from './util/theme';
 
 export interface ColoredText {
   text: string;
@@ -49,60 +36,65 @@ function tokenize_raw(code: string) : string[] {
   return tokens;
 }
 
-export function tokenize(code: string, language: Language) {
-  const tokenizer = language.tokenize;
-
+export function tokenize(code: string, language?: Language) {
   const tokens = tokenize_raw(code);
+  if (!language) return tokens as Token[];
+  
+  const tokenizer = language.tokenize;
   const new_tokens: Token[] = tokenizer(code, tokens);
+
   return new_tokens;
 }
 
 
-function getElemsFromTokens(tokens: Token[]) {
-  const elems: ColoredText[] = [];
+function codeFromTokens(tokens: Token[], theme?: Theme) {
+  const lines: ColoredText[][] = [];
+  let line: ColoredText[] = [];
+
   for (const token of tokens) {
     if (typeof token === 'string' || typeof token.value === 'string') {
       const value = typeof token === 'string' ? token : token.value as string;
 
-      const lines = value.split('\n');
-      for (let i = 0; i < lines.length; i++) {
-        if (i > 0) elems.push(null);
-        elems.push({
-          text: lines[i],
-          color: typeof token === 'string' ? colors.normal : colors[token.type] ?? colors.normal
+      const code_lines = value.split('\n');
+      for (let i = 0; i < code_lines.length; i++) {
+        if (i > 0) {
+          lines.push(line);
+          line = [];
+        }
+
+        const colors = theme?.colors?.tokens;
+        
+        let color;
+        if (typeof token !== 'string') color = colors?.[token.type];
+
+        line.push({
+          text: code_lines[i],
+          color: color ?? colors?.normal ?? "#fff"
         });
       }
       continue;
     }
 
     if (typeof token.value !== 'string') {
-      elems.push(...getElemsFromTokens(token.value));
+      const content_lines = codeFromTokens(token.value, theme);
+      for (let i = 0; i < content_lines.length; i++) {
+        if (i > 0) {
+          lines.push(line);
+          line = content_lines[i];
+          continue;
+        }
+        line.push(...content_lines[i]);
+      }
       continue;
     }
   }
-  return elems;
-}
-export function codeFromTokens(tokens: Token[]) {
-  const elems = getElemsFromTokens(tokens);
-  if (elems[elems.length - 1]) elems.push(null);
-
-  const lines: ColoredText[][] = [];
-  let line: ColoredText[] = [];
-  for (let i = 0; i < elems.length; i++) {
-    if (!elems[i]) {
-      lines.push(line);
-      line = [];
-      continue;
-    }
-    line.push(elems[i]);
-  }
-
+  lines.push(line);
   return lines;
 }
 
-export function highlight(code: string, language: Language) {
+export function highlight(code: string, language?: Language, theme?: Theme) {
   const tokens = tokenize(code, language);
-  const html = codeFromTokens(tokens);
+  const html = codeFromTokens(tokens, theme);
   return html;
 }
 
