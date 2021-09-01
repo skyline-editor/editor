@@ -8,6 +8,8 @@ import { defaultLanguage, Language } from "./language";
 import { EventEmitter } from "events";
 import { EventController } from "./events";
 import { Theme } from "./util/theme";
+import { EditorAPI, EditorAPIEvents } from "./api";
+import { EditorPlugin } from "./plugin";
 
 export const Char = {
   width: 11,
@@ -20,6 +22,8 @@ interface Events {
 }
 
 export class Editor {
+  private api: EditorAPI;
+
   public cursors: Cursor[] = [];
   public selections: Selection[] = [];
 
@@ -43,9 +47,25 @@ export class Editor {
   private shouldRender = false;
   private cursorClock: NodeJS.Timer;
 
+  private plugins: EditorPlugin[];
+
   constructor(code?: string) {
     if (code) this.code = code;
     this.cursorClock = setInterval(this.tick.bind(this), 500);
+    
+    this.api = this.createAPI();
+  }
+
+  private createAPI() {
+    const events = new EditorAPIEvents();
+    events.on('save', this.save.bind(this));
+
+    const api = new EditorAPI(this, events);
+    return api;
+  }
+
+  public use(plugin: typeof EditorPlugin) {
+    this.plugins.push(new plugin(this.createAPI()));
   }
 
   public on<T extends keyof Events>(event: T, handler: Events[T]): void {
@@ -166,7 +186,7 @@ export class Editor {
   }
 
   public tokenize() {
-    this._tokenized = highlight(this.code, this.language, this.theme);
+    this._tokenized = highlight(this.code, this.language, this.theme  );
     return this.tokenized;
   }
 
