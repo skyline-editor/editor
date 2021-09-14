@@ -47,7 +47,7 @@ export class Editor {
   private shouldRender = false;
   private cursorClock: NodeJS.Timer;
 
-  private plugins: EditorPlugin[];
+  private plugins: Map<string, EditorPlugin> = new Map();
 
   constructor(code?: string) {
     if (code) this.code = code;
@@ -64,8 +64,13 @@ export class Editor {
     return api;
   }
 
-  public use(plugin: typeof EditorPlugin) {
-    this.plugins.push(new plugin(this.createAPI()));
+  public use<T extends typeof EditorPlugin>(plugin: T) {
+    const instance = new plugin(this.createAPI());
+    this.plugins.set(instance.name, instance);
+  }
+
+  public getPlugin<T extends typeof EditorPlugin>(name: string): InstanceType<T> | null {
+    return this.plugins.get(name) as InstanceType<T>;
   }
 
   public on<T extends keyof Events>(event: T, handler: Events[T]): void {
